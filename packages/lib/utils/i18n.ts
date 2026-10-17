@@ -55,29 +55,16 @@ type ExtractLocaleDataOptions = {
 };
 
 /**
- * Extract the supported language from the header.
+ * Resolve the language for a request that has no language cookie.
  *
- * Will return the default fallback language if not found.
+ * This instance always defaults to `APP_I18N_OPTIONS.defaultLang` (Hebrew), regardless
+ * of the browser's `accept-language` header. Users can still switch language, which sets the cookie.
  */
 export const extractLocaleData = ({ headers }: ExtractLocaleDataOptions): I18nLocaleData => {
   const headerLocales = (headers.get('accept-language') ?? '').split(',');
 
-  const unknownLanguages = headerLocales
-    .map((locale) => parseLanguageFromLocale(locale))
-    .filter((value): value is SupportedLanguageCodes => value !== null);
-
-  // Filter out locales that are not valid.
-  const languages = (unknownLanguages ?? []).filter((language) => {
-    try {
-      new Intl.Locale(language);
-      return true;
-    } catch {
-      return false;
-    }
-  });
-
   return {
-    lang: languages[0] || APP_I18N_OPTIONS.sourceLang,
+    lang: APP_I18N_OPTIONS.defaultLang,
     locales: headerLocales,
   };
 };

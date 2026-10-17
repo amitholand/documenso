@@ -20,6 +20,7 @@ export type SupportedLanguageCodes = (typeof SUPPORTED_LANGUAGE_CODES)[number];
 export const APP_I18N_OPTIONS = {
   supportedLangs: SUPPORTED_LANGUAGE_CODES,
   sourceLang: 'en',
+  defaultLang: 'he',
   defaultLocale: 'en-US',
 } as const;
 
