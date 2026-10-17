@@ -86,7 +86,7 @@ export const EnvelopeGenericPageRenderer = ({ pageData }: { pageData: PageRender
 
     const signature = insertedSignature ?? {
       signatureImageAsBase64: '',
-      typedSignature: fieldTranslations.SIGNATURE,
+      typedSignature: field.fieldMeta?.label || fieldTranslations.SIGNATURE,
     };
 
     renderField({
