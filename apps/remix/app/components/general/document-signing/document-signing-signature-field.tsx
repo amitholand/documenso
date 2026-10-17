@@ -2,6 +2,8 @@ import { useAnalytics } from '@documenso/lib/client-only/hooks/use-analytics';
 import { DO_NOT_INVALIDATE_QUERY_ON_MUTATION } from '@documenso/lib/constants/trpc';
 import { AppError, AppErrorCode } from '@documenso/lib/errors/app-error';
 import type { TRecipientActionAuth } from '@documenso/lib/types/document-auth';
+import { ZSignatureFieldMeta } from '@documenso/lib/types/field-meta';
+import { resolveSignatureTypes } from '@documenso/lib/utils/signature-field-types';
 import type { FieldWithSignature } from '@documenso/prisma/types/field-with-signature';
 import { trpc } from '@documenso/trpc/react';
 import type {
@@ -72,6 +74,21 @@ export const DocumentSigningSignatureField = ({
 
   const { signature } = field;
 
+  const fieldLabel = useMemo(() => ZSignatureFieldMeta.safeParse(field.fieldMeta).data?.label, [field.fieldMeta]);
+
+  const resolvedSignatureTypes = useMemo(
+    () =>
+      resolveSignatureTypes(field.fieldMeta, {
+        typedSignatureEnabled,
+        uploadSignatureEnabled,
+        drawSignatureEnabled,
+      }),
+    [field.fieldMeta, typedSignatureEnabled, uploadSignatureEnabled, drawSignatureEnabled],
+  );
+
+  // Fields with their own signature types (e.g. a company stamp) never reuse or replace the regular signature.
+  const { hasFieldSignatureTypes } = resolvedSignatureTypes;
+
   const isLoading = isSignFieldWithTokenLoading || isRemoveSignedFieldWithTokenLoading;
 
   const [showSignatureModal, setShowSignatureModal] = useState(false);
@@ -90,7 +107,7 @@ export const DocumentSigningSignatureField = ({
   }, [field.inserted, signature?.signatureImageAsBase64]);
 
   const onPreSign = () => {
-    if (!providedSignature) {
+    if (!providedSignature || hasFieldSignatureTypes) {
       setShowSignatureModal(true);
       return false;
     }
@@ -102,7 +119,10 @@ export const DocumentSigningSignatureField = ({
    */
   const onDialogSignClick = () => {
     setShowSignatureModal(false);
-    setProvidedSignature(localSignature);
+
+    if (!hasFieldSignatureTypes) {
+      setProvidedSignature(localSignature);
+    }
 
     if (!localSignature) {
       return;
@@ -116,7 +136,7 @@ export const DocumentSigningSignatureField = ({
 
   const onSign = async (authOptions?: TRecipientActionAuth, signature?: string) => {
     try {
-      const value = signature || providedSignature;
+      const value = signature || (hasFieldSignatureTypes ? null : providedSignature);
 
       if (!value) {
         setShowSignatureModal(true);
@@ -125,7 +145,7 @@ export const DocumentSigningSignatureField = ({
 
       const isTypedSignature = !value.startsWith('data:image');
 
-      if (isTypedSignature && typedSignatureEnabled === false) {
+      if (isTypedSignature && !resolvedSignatureTypes.typedSignatureEnabled) {
         toast({
           title: _(msg`Error`),
           description: _(msg`Typed signatures are not allowed. Please draw your signature.`),
@@ -255,7 +275,7 @@ export const DocumentSigningSignatureField = ({
 
       {state === 'empty' && (
         <p className="font-signature text-[clamp(0.575rem,25cqw,1.2rem)] text-muted-foreground text-xl duration-200 group-hover:text-primary group-hover:text-recipient-green">
-          <Trans>Signature</Trans>
+          {fieldLabel || <Trans>Signature</Trans>}
         </p>
       )}
 
@@ -282,6 +302,7 @@ export const DocumentSigningSignatureField = ({
       <Dialog open={showSignatureModal} onOpenChange={setShowSignatureModal}>
         <DialogContent>
           <DialogTitle>
+            {fieldLabel && <div className="mb-1">{fieldLabel}</div>}
             <Trans>
               Sign as {recipient.name} <div className="h-5 text-muted-foreground">({recipient.email})</div>
             </Trans>
@@ -292,9 +313,9 @@ export const DocumentSigningSignatureField = ({
             fullName={fullName}
             value={localSignature ?? ''}
             onChange={({ value }) => setLocalSignature(value)}
-            typedSignatureEnabled={typedSignatureEnabled}
-            uploadSignatureEnabled={uploadSignatureEnabled}
-            drawSignatureEnabled={drawSignatureEnabled}
+            typedSignatureEnabled={resolvedSignatureTypes.typedSignatureEnabled}
+            uploadSignatureEnabled={resolvedSignatureTypes.uploadSignatureEnabled}
+            drawSignatureEnabled={resolvedSignatureTypes.drawSignatureEnabled}
           />
 
           <DocumentSigningDisclosure />

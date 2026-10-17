@@ -10,13 +10,22 @@ import { DocumentSigningDisclosure } from '../general/document-signing/document-
 export type SignFieldSignatureDialogProps = {
   initialSignature?: string;
   fullName?: string;
+  label?: string;
   typedSignatureEnabled?: boolean;
   uploadSignatureEnabled?: boolean;
   drawSignatureEnabled?: boolean;
 };
 
 export const SignFieldSignatureDialog = createCallable<SignFieldSignatureDialogProps, string | null>(
-  ({ call, fullName, typedSignatureEnabled, uploadSignatureEnabled, drawSignatureEnabled, initialSignature }) => {
+  ({
+    call,
+    fullName,
+    label,
+    typedSignatureEnabled,
+    uploadSignatureEnabled,
+    drawSignatureEnabled,
+    initialSignature,
+  }) => {
     const [localSignature, setLocalSignature] = useState(initialSignature);
 
     return (
@@ -24,9 +33,7 @@ export const SignFieldSignatureDialog = createCallable<SignFieldSignatureDialogP
         <DialogContent position="center">
           <div>
             <DialogHeader>
-              <DialogTitle>
-                <Trans>Sign Signature Field</Trans>
-              </DialogTitle>
+              <DialogTitle>{label ? label : <Trans>Sign Signature Field</Trans>}</DialogTitle>
             </DialogHeader>
 
             <SignaturePad

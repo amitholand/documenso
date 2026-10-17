@@ -178,9 +178,19 @@ export const ZDropdownFieldMeta = ZBaseFieldMeta.extend({
 
 export type TDropdownFieldMeta = z.infer<typeof ZDropdownFieldMeta>;
 
+export const ZSignatureFieldType = z.enum(['draw', 'type', 'upload']);
+export type TSignatureFieldType = z.infer<typeof ZSignatureFieldType>;
+
 export const ZSignatureFieldMeta = ZBaseFieldMeta.extend({
   type: z.literal('signature'),
   overflow: ZFieldOverflowMode.optional().default(DEFAULT_SIGNATURE_OVERFLOW_MODE),
+  signatureTypes: z
+    .array(ZSignatureFieldType)
+    .min(1)
+    .optional()
+    .describe(
+      'The signature types allowed for this field. Overrides the document signature settings. Use ["upload"] for a company stamp.',
+    ),
 });
 
 export type TSignatureFieldMeta = z.infer<typeof ZSignatureFieldMeta>;

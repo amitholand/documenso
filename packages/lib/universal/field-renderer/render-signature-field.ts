@@ -126,7 +126,10 @@ const createFieldSignature = (field: FieldToRender, options: RenderFieldElementO
     listening: false,
   });
 
-  const fieldTypeName = translations?.[field.type] || field.type;
+  const signatureFieldMeta = field.fieldMeta as TSignatureFieldMeta | undefined;
+
+  // Show the field's label (e.g. "Company stamp") instead of the generic type name when set.
+  const fieldTypeName = signatureFieldMeta?.label || translations?.[field.type] || field.type;
 
   // Calculate text positioning based on alignment
   const textX = 0;
@@ -176,7 +179,7 @@ const createFieldSignature = (field: FieldToRender, options: RenderFieldElementO
     }
   }
 
-  const fieldMeta = field.fieldMeta as TSignatureFieldMeta | undefined;
+  const fieldMeta = signatureFieldMeta;
 
   // Whether we're rendering the field type name (like "Signature") vs actual signed content.
   // Overflow should not apply to the label.

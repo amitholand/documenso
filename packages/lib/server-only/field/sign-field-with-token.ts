@@ -27,6 +27,7 @@ import type { RequestMetadata } from '../../universal/extract-request-metadata';
 import { createDocumentAuditLogData } from '../../utils/document-audit-logs';
 import { getRecipientFieldsWhereInput } from '../../utils/recipient-queries';
 import { assertRecipientNotExpired } from '../../utils/recipients';
+import { getSignatureValueError } from '../../utils/signature-field-types';
 import { validateFieldAuth } from '../document/validate-field-auth';
 import { assertSenderNotDisabled } from '../user/assert-user-not-disabled';
 
@@ -208,8 +209,16 @@ export const signFieldWithToken = async ({
     throw new Error('Signature field must have a signature');
   }
 
-  if (isSignatureField && documentMeta?.typedSignatureEnabled === false && typedSignature) {
-    throw new Error('Typed signatures are not allowed. Please draw your signature');
+  if (isSignatureField) {
+    const signatureValueError = getSignatureValueError(
+      signatureImageAsBase64 || typedSignature || '',
+      field.fieldMeta,
+      documentMeta,
+    );
+
+    if (signatureValueError) {
+      throw new Error(signatureValueError);
+    }
   }
 
   if (field.fieldMeta?.readOnly && !AUTO_SIGNABLE_FIELD_TYPES.includes(field.type)) {

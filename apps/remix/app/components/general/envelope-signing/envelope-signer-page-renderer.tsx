@@ -387,10 +387,12 @@ export const EnvelopeSignerPageRenderer = ({ pageData }: { pageData: PageRenderD
             uploadSignatureEnabled: envelope.documentMeta.uploadSignatureEnabled,
             drawSignatureEnabled: envelope.documentMeta.drawSignatureEnabled,
           })
-            .then(async (payload) => {
-              if (!payload) {
+            .then(async (result) => {
+              if (!result) {
                 return;
               }
+
+              const { isReusableSignature, ...payload } = result;
 
               fieldGroup.add(loadingSpinnerGroup);
 
@@ -404,7 +406,10 @@ export const EnvelopeSignerPageRenderer = ({ pageData }: { pageData: PageRenderD
                   actionTarget: field.type,
                 });
 
-                setSignature(payload.value);
+                // Don't reuse a stamp (or other field-specific value) as the signer's regular signature.
+                if (isReusableSignature) {
+                  setSignature(payload.value);
+                }
               } else {
                 await signField(field.id, payload);
               }

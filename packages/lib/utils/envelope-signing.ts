@@ -3,7 +3,6 @@ import { validateDropdownField } from '@documenso/lib/advanced-fields-validation
 import { validateNumberField } from '@documenso/lib/advanced-fields-validation/validate-number';
 import { validateTextField } from '@documenso/lib/advanced-fields-validation/validate-text';
 import { DEFAULT_DOCUMENT_DATE_FORMAT } from '@documenso/lib/constants/date-formats';
-import { isBase64Image } from '@documenso/lib/constants/signatures';
 import { DEFAULT_DOCUMENT_TIME_ZONE } from '@documenso/lib/constants/time-zones';
 import { AppError, AppErrorCode } from '@documenso/lib/errors/app-error';
 import type { TDocumentMeta } from '@documenso/lib/types/document-meta';
@@ -15,6 +14,7 @@ import {
   ZTextFieldMeta,
 } from '@documenso/lib/types/field-meta';
 import { toCheckboxCustomText, toRadioCustomText } from '@documenso/lib/utils/fields';
+import { getSignatureValueError } from '@documenso/lib/utils/signature-field-types';
 import { zEmail } from '@documenso/lib/utils/zod';
 import type { TSignEnvelopeFieldValue } from '@documenso/trpc/server/envelope-router/sign-envelope-field.types';
 import { checkboxValidationSigns } from '@documenso/ui/primitives/document-flow/field-items-advanced-settings/constants';
@@ -27,7 +27,10 @@ import { z } from 'zod';
 export type ExtractFieldInsertionValuesOptions = {
   fieldValue: TSignEnvelopeFieldValue;
   field: Field;
-  documentMeta: Pick<TDocumentMeta, 'timezone' | 'dateFormat' | 'typedSignatureEnabled'>;
+  documentMeta: Pick<
+    TDocumentMeta,
+    'timezone' | 'dateFormat' | 'typedSignatureEnabled' | 'uploadSignatureEnabled' | 'drawSignatureEnabled'
+  >;
 };
 
 export const extractFieldInsertionValues = ({
@@ -236,11 +239,11 @@ export const extractFieldInsertionValues = ({
         };
       }
 
-      const isBase64 = isBase64Image(value);
+      const signatureValueError = getSignatureValueError(value, field.fieldMeta, documentMeta);
 
-      if (documentMeta.typedSignatureEnabled === false && !isBase64) {
+      if (signatureValueError) {
         throw new AppError(AppErrorCode.INVALID_BODY, {
-          message: 'Typed signatures are not allowed. Please draw your signature',
+          message: signatureValueError,
         });
       }
 
