@@ -173,7 +173,7 @@ export const OrganisationEmailCreateDialog = ({
                           }}
                           placeholder={t`support`}
                         />
-                        <div className="absolute top-0 right-0 bottom-0 flex items-center rounded-r-md border bg-muted px-3 py-2 text-muted-foreground text-sm">
+                        <div className="absolute top-0 right-0 bottom-0 flex items-center rounded-e-md border bg-muted px-3 py-2 text-muted-foreground text-sm">
                           @{emailDomain.domain}
                         </div>
                       </div>

@@ -297,3 +297,11 @@
 .swagger-dark-theme .swagger-ui .microlight {
   filter: invert(100%) hue-rotate(180deg);
 }
+
+/*
+ * Right-to-left support: `space-x-*` puts its gap on the left of each following child,
+ * which is the wrong side in RTL. Reversing it keeps the gap between items.
+ */
+[dir="rtl"] [class*="space-x-"] > :not([hidden]) ~ :not([hidden]) {
+  --tw-space-x-reverse: 1;
+}

@@ -95,7 +95,7 @@ export const GenericErrorLayout = ({
                     void navigate(-1);
                   }}
                 >
-                  <ChevronLeft className="mr-2 h-4 w-4" />
+                  <ChevronLeft className="me-2 h-4 w-4" />
                   <Trans>Go Back</Trans>
                 </Button>
               ))}

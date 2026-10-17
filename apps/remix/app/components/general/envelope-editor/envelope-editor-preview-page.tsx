@@ -264,7 +264,7 @@ export const EnvelopeEditorPreviewPage = () => {
 
         {/* Right Section - Form Fields Panel */}
         {currentEnvelopeItem && false && (
-          <div className="sticky top-0 h-full w-80 flex-shrink-0 overflow-y-auto border-gray-200 border-l bg-white py-4">
+          <div className="sticky top-0 h-full w-80 flex-shrink-0 overflow-y-auto border-gray-200 border-s bg-white py-4">
             {/* Add fields section. */}
             <section className="px-4">
               {/* <h3 className="mb-2 text-sm font-semibold text-gray-900">
@@ -294,7 +294,7 @@ export const EnvelopeEditorPreviewPage = () => {
                   />
                   <Label
                     htmlFor="document-signed-preview"
-                    className="text-foreground ml-1.5 text-xs font-normal"
+                    className="text-foreground ms-1.5 text-xs font-normal"
                   >
                     <Trans>Document Signed Preview</Trans>
                   </Label>
@@ -308,7 +308,7 @@ export const EnvelopeEditorPreviewPage = () => {
                   />
                   <Label
                     htmlFor="recipient-preview"
-                    className="text-foreground ml-1.5 text-xs font-normal"
+                    className="text-foreground ms-1.5 text-xs font-normal"
                   >
                     <Trans>Recipient Preview</Trans>
                   </Label>

@@ -176,7 +176,7 @@ export const DocumentSigningRadioField = ({ field, onSignField, onUnsignField }:
                 disabled={isReadOnly}
               />
               {!item.value.includes('empty-value-') && item.value && (
-                <Label htmlFor={`option-${field.id}-${item.id}`} className="ml-1.5 font-normal text-foreground text-xs">
+                <Label htmlFor={`option-${field.id}-${item.id}`} className="ms-1.5 font-normal text-foreground text-xs">
                   {item.value}
                 </Label>
               )}
@@ -196,7 +196,7 @@ export const DocumentSigningRadioField = ({ field, onSignField, onUnsignField }:
                 disabled={isReadOnly}
               />
               {!item.value.includes('empty-value-') && item.value && (
-                <Label htmlFor={`option-${field.id}-${item.id}`} className="ml-1.5 font-normal text-foreground text-xs">
+                <Label htmlFor={`option-${field.id}-${item.id}`} className="ms-1.5 font-normal text-foreground text-xs">
                   {item.value}
                 </Label>
               )}

@@ -308,7 +308,7 @@ export const EnvelopeEditorFieldsPage = () => {
 
       {/* Right Section - Form Fields Panel */}
       {currentEnvelopeItem && envelope.recipients.length > 0 && (
-        <div className="sticky top-0 h-full w-80 flex-shrink-0 overflow-y-auto border-border border-l bg-background py-4">
+        <div className="sticky top-0 h-full w-80 flex-shrink-0 overflow-y-auto border-border border-s bg-background py-4">
           {/* Recipient selector section. */}
           <section className="px-4">
             <h3 className="mb-2 font-semibold text-foreground text-sm">
@@ -364,7 +364,7 @@ export const EnvelopeEditorFieldsPage = () => {
                       : undefined
                   }
                 >
-                  <SparklesIcon className="mr-2 -ml-1 h-4 w-4" />
+                  <SparklesIcon className="-ms-1 me-2 h-4 w-4" />
                   <Trans>Detect with AI</Trans>
                 </Button>
 

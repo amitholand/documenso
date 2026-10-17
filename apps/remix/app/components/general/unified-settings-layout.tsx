@@ -180,7 +180,7 @@ export const UnifiedSettingsLayout = ({ activeScope, preferredTeamUrl = null }: 
 
   return (
     <div className="flex flex-col md:min-h-0 md:flex-1 md:flex-row">
-      <aside className="hover-scrollbar w-full shrink-0 border-b bg-background md:w-80 md:overflow-y-auto md:border-r md:border-b-0">
+      <aside className="hover-scrollbar w-full shrink-0 border-b bg-background md:w-80 md:overflow-y-auto md:border-e md:border-b-0">
         <div className="flex h-full flex-col">
           <div className="hidden md:block">
             <UnifiedSettingsSidebar

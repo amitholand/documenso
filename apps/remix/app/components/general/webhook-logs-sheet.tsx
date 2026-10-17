@@ -86,16 +86,16 @@ export const WebhookLogsSheet = createCallable<WebhookLogsSheetProps, string | n
                 size="sm"
                 className="mb-2"
               >
-                {!isResending && <RotateCwIcon className="mr-2 h-3.5 w-3.5" />}
+                {!isResending && <RotateCwIcon className="me-2 h-3.5 w-3.5" />}
                 <Trans>Resend</Trans>
               </Button>
             </div>
             <div className="overflow-hidden rounded-lg border border-border">
-              <table className="w-full text-left text-sm">
+              <table className="w-full text-start text-sm">
                 <tbody className="divide-y divide-border bg-muted/30">
                   {generalWebhookDetails.map(({ header, value }, index) => (
                     <tr key={index}>
-                      <td className="w-1/3 border-border border-r px-4 py-2 font-mono text-muted-foreground text-xs">
+                      <td className="w-1/3 border-border border-e px-4 py-2 font-mono text-muted-foreground text-xs">
                         {header}
                       </td>
                       <td className="break-all px-4 py-2 font-mono text-foreground text-xs">{value}</td>
@@ -156,11 +156,11 @@ export const WebhookLogsSheet = createCallable<WebhookLogsSheetProps, string | n
                   <Trans>Response Headers</Trans>
                 </h4>
                 <div className="overflow-hidden rounded-lg border border-border">
-                  <table className="w-full text-left text-sm">
+                  <table className="w-full text-start text-sm">
                     <tbody className="divide-y divide-border bg-muted/30">
                       {Object.entries(webhookCall.responseHeaders as Record<string, string>).map(([key, value]) => (
                         <tr key={key}>
-                          <td className="w-1/3 border-border border-r px-4 py-2 font-mono text-muted-foreground text-xs">
+                          <td className="w-1/3 border-border border-e px-4 py-2 font-mono text-muted-foreground text-xs">
                             {key}
                           </td>
                           <td className="break-all px-4 py-2 font-mono text-foreground text-xs">{value as string}</td>

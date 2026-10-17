@@ -312,7 +312,7 @@ const FieldItemInner = ({
         <div className="absolute top-0 -right-5 z-20 hidden h-full w-5 items-center justify-center group-hover:flex">
           <div
             className={cn(
-              'flex h-5 w-5 flex-col items-center justify-center rounded-r-md font-bold text-[0.5rem] text-white opacity-0 transition duration-200 group-hover/field-item:opacity-100',
+              'flex h-5 w-5 flex-col items-center justify-center rounded-e-md font-bold text-[0.5rem] text-white opacity-0 transition duration-200 group-hover/field-item:opacity-100',
               signerStyles.fieldItemInitials,
               {
                 '!opacity-50': disabled || passive,

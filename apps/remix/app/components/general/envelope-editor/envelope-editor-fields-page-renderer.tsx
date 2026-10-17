@@ -940,7 +940,7 @@ const FieldActionButtons = ({
                       setShowFieldTypeSelector(false);
                     }}
                   >
-                    <FieldIcon className="mr-2 h-4 w-4" />
+                    <FieldIcon className="me-2 h-4 w-4" />
                     <span className="truncate">{label}</span>
                   </CommandItem>
                 );

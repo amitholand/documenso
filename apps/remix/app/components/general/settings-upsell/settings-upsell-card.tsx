@@ -57,7 +57,7 @@ export const SettingsUpsellCard = ({
   const ctaContent = (
     <>
       {ctaLabel ?? <Trans>Upgrade Plan</Trans>}
-      <ArrowRightIcon className="ml-2 h-4 w-4" />
+      <ArrowRightIcon className="ms-2 h-4 w-4" />
     </>
   );
 
@@ -71,7 +71,7 @@ export const SettingsUpsellCard = ({
        */}
       <div className="flex min-w-0 flex-col items-start p-6 md:p-8">
         <Badge size="small">
-          <LockIcon className="mr-1 h-3 w-3" />
+          <LockIcon className="me-1 h-3 w-3" />
           <span className="uppercase">{planLabel}</span>
         </Badge>
 
@@ -109,7 +109,7 @@ export const SettingsUpsellCard = ({
 
       <div
         aria-hidden="true"
-        className="flex min-w-0 flex-col justify-center gap-3 border-t bg-muted p-6 md:border-t-0 md:border-l md:p-8"
+        className="flex min-w-0 flex-col justify-center gap-3 border-t bg-muted p-6 md:border-s md:border-t-0 md:p-8"
       >
         {preview}
       </div>

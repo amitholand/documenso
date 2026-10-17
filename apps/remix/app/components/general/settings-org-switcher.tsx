@@ -133,7 +133,7 @@ export const SettingsOrgSwitcher = ({ currentOrgUrl }: SettingsOrgSwitcherProps)
             secondaryText={
               isBillingEnabled ? getPlanName(currentOrg.organisationClaim.originalSubscriptionClaimId) : undefined
             }
-            rightSideComponent={<ChevronsUpDownIcon className="ml-auto h-4 w-4 shrink-0 text-muted-foreground" />}
+            rightSideComponent={<ChevronsUpDownIcon className="ms-auto h-4 w-4 shrink-0 text-muted-foreground" />}
           />
         </Button>
       </PopoverTrigger>
@@ -150,7 +150,7 @@ export const SettingsOrgSwitcher = ({ currentOrgUrl }: SettingsOrgSwitcherProps)
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder={t`Search organisations…`}
-                className="h-8 pl-7"
+                className="h-8 ps-7"
                 data-testid="settings-org-switcher-search"
               />
             </div>
@@ -166,7 +166,7 @@ export const SettingsOrgSwitcher = ({ currentOrgUrl }: SettingsOrgSwitcherProps)
                   type="button"
                   onClick={() => handleSelect(org.url)}
                   className={cn(
-                    'flex w-full items-center rounded-md px-2 py-2 text-left hover:bg-muted',
+                    'flex w-full items-center rounded-md px-2 py-2 text-start hover:bg-muted',
                     isCurrent && 'bg-muted',
                   )}
                   data-testid={`settings-org-switcher-item-${org.url}`}
@@ -189,7 +189,7 @@ export const SettingsOrgSwitcher = ({ currentOrgUrl }: SettingsOrgSwitcherProps)
         <div className="border-t p-1">
           <Button variant="ghost" asChild className="w-full justify-start" data-testid="settings-org-switcher-create">
             <a href="/settings/organisations?action=add-organisation">
-              <PlusIcon className="mr-2 h-4 w-4" />
+              <PlusIcon className="me-2 h-4 w-4" />
               <Trans>Create organisation</Trans>
             </a>
           </Button>

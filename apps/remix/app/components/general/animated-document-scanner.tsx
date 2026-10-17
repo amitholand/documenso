@@ -42,7 +42,7 @@ export const AnimatedDocumentScanner = ({ className, interval = 2500 }: Animated
         <div className="relative h-full w-full" style={{ transformStyle: 'preserve-3d' }}>
           {/* Left page */}
           <div
-            className="absolute top-0 left-0 h-full w-[calc(50%)] origin-right overflow-hidden rounded-l-md border border-border bg-card shadow-md"
+            className="absolute top-0 left-0 h-full w-[calc(50%)] origin-right overflow-hidden rounded-s-md border border-border bg-card shadow-md"
             style={{ transform: 'rotateY(15deg) skewY(-1deg)' }}
           >
             <div className="absolute inset-3 space-y-2">
@@ -56,7 +56,7 @@ export const AnimatedDocumentScanner = ({ className, interval = 2500 }: Animated
 
           {/* Right page */}
           <div
-            className="absolute top-0 right-0 h-full w-[calc(50%)] origin-left overflow-hidden rounded-r-md border border-border bg-card shadow-md"
+            className="absolute top-0 right-0 h-full w-[calc(50%)] origin-left overflow-hidden rounded-e-md border border-border bg-card shadow-md"
             style={{ transform: 'rotateY(-15deg) skewY(1deg)' }}
           >
             <div className="absolute inset-3 space-y-2">
