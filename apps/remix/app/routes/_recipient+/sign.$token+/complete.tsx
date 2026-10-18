@@ -1,14 +1,12 @@
 import signingCelebration from '@documenso/assets/images/signing-celebration.png';
 import { getOptionalSession } from '@documenso/auth/server/lib/utils/get-session';
 import { useOptionalSession } from '@documenso/lib/client-only/providers/session';
-import { isSignupEnabledForProvider } from '@documenso/lib/constants/auth';
 import { loadRecipientBrandingByTeamId } from '@documenso/lib/server-only/branding/load-recipient-branding';
 import { getDocumentAndSenderByToken } from '@documenso/lib/server-only/document/get-document-by-token';
 import { isRecipientAuthorized } from '@documenso/lib/server-only/document/is-recipient-authorized';
 import { getFieldsForToken } from '@documenso/lib/server-only/field/get-fields-for-token';
 import { getRecipientByToken } from '@documenso/lib/server-only/recipient/get-recipient-by-token';
 import { getRecipientSignatures } from '@documenso/lib/server-only/recipient/get-recipient-signatures';
-import { getUserByEmail } from '@documenso/lib/server-only/user/get-user-by-email';
 import { isDocumentCompleted } from '@documenso/lib/utils/document';
 import { trpc } from '@documenso/trpc/react';
 import { DocumentShareButton } from '@documenso/ui/components/document/document-share-button';
@@ -76,14 +74,11 @@ export async function loader({ params, request }: Route.LoaderArgs) {
   }
 
   const signatures = await getRecipientSignatures({ recipientId: recipient.id });
-  const isExistingUser = await getUserByEmail({ email: recipient.email })
-    .then((u) => !!u)
-    .catch(() => false);
-
   const recipientName =
     recipient.name || fields.find((field) => field.type === FieldType.NAME)?.customText || recipient.email;
 
-  const canSignUp = !isExistingUser && isSignupEnabledForProvider('email');
+  // Signers are not offered to create an account after signing.
+  const canSignUp = false;
 
   const canRedirectToFolder = user && document.userId === user.id && document.folderId && document.team?.url;
 

@@ -9,7 +9,6 @@ import { SignFieldSignatureDialog } from '~/components/dialogs/sign-field-signat
 type HandleSignatureFieldClickOptions = {
   field: TFieldSignature;
   fullName?: string;
-  signature: string | null;
   typedSignatureEnabled?: boolean;
   uploadSignatureEnabled?: boolean;
   drawSignatureEnabled?: boolean;
@@ -17,10 +16,8 @@ type HandleSignatureFieldClickOptions = {
 
 export const handleSignatureFieldClick = async (
   options: HandleSignatureFieldClickOptions,
-): Promise<
-  (Extract<TSignEnvelopeFieldValue, { type: typeof FieldType.SIGNATURE }> & { isReusableSignature?: boolean }) | null
-> => {
-  const { field, fullName, signature, typedSignatureEnabled, uploadSignatureEnabled, drawSignatureEnabled } = options;
+): Promise<Extract<TSignEnvelopeFieldValue, { type: typeof FieldType.SIGNATURE }> | null> => {
+  const { field, fullName, typedSignatureEnabled, uploadSignatureEnabled, drawSignatureEnabled } = options;
 
   if (field.type !== FieldType.SIGNATURE) {
     throw new AppError(AppErrorCode.INVALID_REQUEST, {
@@ -41,18 +38,14 @@ export const handleSignatureFieldClick = async (
     drawSignatureEnabled,
   });
 
-  // Fields with their own signature types (e.g. a company stamp) always ask for a new value.
-  let signatureToInsert = resolvedSignatureTypes.hasFieldSignatureTypes ? null : signature;
-
-  if (!signatureToInsert) {
-    signatureToInsert = await SignFieldSignatureDialog.call({
-      fullName,
-      label: field.fieldMeta?.label,
-      typedSignatureEnabled: resolvedSignatureTypes.typedSignatureEnabled,
-      uploadSignatureEnabled: resolvedSignatureTypes.uploadSignatureEnabled,
-      drawSignatureEnabled: resolvedSignatureTypes.drawSignatureEnabled,
-    });
-  }
+  // Every signature field asks for its own value, never reusing a previous signature.
+  const signatureToInsert = await SignFieldSignatureDialog.call({
+    fullName,
+    label: field.fieldMeta?.label,
+    typedSignatureEnabled: resolvedSignatureTypes.typedSignatureEnabled,
+    uploadSignatureEnabled: resolvedSignatureTypes.uploadSignatureEnabled,
+    drawSignatureEnabled: resolvedSignatureTypes.drawSignatureEnabled,
+  });
 
   if (!signatureToInsert) {
     return null;
@@ -61,6 +54,5 @@ export const handleSignatureFieldClick = async (
   return {
     type: FieldType.SIGNATURE,
     value: signatureToInsert,
-    isReusableSignature: !resolvedSignatureTypes.hasFieldSignatureTypes,
   };
 };

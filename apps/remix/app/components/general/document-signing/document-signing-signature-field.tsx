@@ -58,11 +58,7 @@ export const DocumentSigningSignatureField = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const [fontSize, setFontSize] = useState(2);
 
-  const {
-    fullName,
-    signature: providedSignature,
-    setSignature: setProvidedSignature,
-  } = useRequiredDocumentSigningContext();
+  const { fullName } = useRequiredDocumentSigningContext();
 
   const { executeActionAuthProcedure } = useRequiredDocumentSigningAuthContext();
 
@@ -86,9 +82,6 @@ export const DocumentSigningSignatureField = ({
     [field.fieldMeta, typedSignatureEnabled, uploadSignatureEnabled, drawSignatureEnabled],
   );
 
-  // Fields with their own signature types (e.g. a company stamp) never reuse or replace the regular signature.
-  const { hasFieldSignatureTypes } = resolvedSignatureTypes;
-
   const isLoading = isSignFieldWithTokenLoading || isRemoveSignedFieldWithTokenLoading;
 
   const [showSignatureModal, setShowSignatureModal] = useState(false);
@@ -106,23 +99,16 @@ export const DocumentSigningSignatureField = ({
     return 'signed-text';
   }, [field.inserted, signature?.signatureImageAsBase64]);
 
+  // Every signature field asks for its own value, never reusing a previous signature.
   const onPreSign = () => {
-    if (!providedSignature || hasFieldSignatureTypes) {
-      setShowSignatureModal(true);
-      return false;
-    }
-
-    return true;
+    setShowSignatureModal(true);
+    return false;
   };
   /**
    * When the user clicks the sign button in the dialog where they enter their signature.
    */
   const onDialogSignClick = () => {
     setShowSignatureModal(false);
-
-    if (!hasFieldSignatureTypes) {
-      setProvidedSignature(localSignature);
-    }
 
     if (!localSignature) {
       return;
@@ -136,7 +122,7 @@ export const DocumentSigningSignatureField = ({
 
   const onSign = async (authOptions?: TRecipientActionAuth, signature?: string) => {
     try {
-      const value = signature || (hasFieldSignatureTypes ? null : providedSignature);
+      const value = signature;
 
       if (!value) {
         setShowSignatureModal(true);

@@ -28,6 +28,12 @@ export type EnvelopeSigningContextValue = {
   showPendingFieldTooltip: boolean;
   setShowPendingFieldTooltip: (_value: boolean) => void;
 
+  /**
+   * The field that should open its signing input as soon as it is rendered (used by "Next field").
+   */
+  fieldIdToActivate: number | null;
+  setFieldIdToActivate: (_value: number | null) => void;
+
   envelopeData: EnvelopeForSigningResponse;
   envelope: EnvelopeForSigningResponse['envelope'];
 
@@ -137,6 +143,7 @@ export const EnvelopeSigningProvider = ({
   const [email, setEmail] = useState(initialEmail || '');
 
   const [showPendingFieldTooltip, setShowPendingFieldTooltip] = useState(false);
+  const [fieldIdToActivate, setFieldIdToActivate] = useState<number | null>(null);
 
   const isDirectTemplate = envelope.type === EnvelopeType.TEMPLATE;
 
@@ -398,6 +405,9 @@ export const EnvelopeSigningProvider = ({
 
         showPendingFieldTooltip,
         setShowPendingFieldTooltip,
+
+        fieldIdToActivate,
+        setFieldIdToActivate,
 
         recipient,
         recipientFieldsRemaining,

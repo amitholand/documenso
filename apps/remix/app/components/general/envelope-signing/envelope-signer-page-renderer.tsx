@@ -62,13 +62,13 @@ export const EnvelopeSignerPageRenderer = ({ pageData }: { pageData: PageRenderD
     recipientFields,
     recipientFieldsRemaining,
     showPendingFieldTooltip,
+    fieldIdToActivate,
+    setFieldIdToActivate,
     signField: signFieldInternal,
     email: emailState,
     setEmail,
     fullName: fullNameState,
     setFullName,
-    signature: signatureState,
-    setSignature,
     selectedAssistantRecipientFields,
     selectedAssistantRecipient,
     isDirectTemplate,
@@ -77,13 +77,11 @@ export const EnvelopeSignerPageRenderer = ({ pageData }: { pageData: PageRenderD
   // Note: We're using refs here due to the closure within the signField function.
   const fullName = useRef(fullNameState);
   const email = useRef(emailState);
-  const signature = useRef(signatureState);
 
   useEffect(() => {
     fullName.current = fullNameState;
     email.current = emailState;
-    signature.current = signatureState;
-  }, [fullNameState, emailState, signatureState]);
+  }, [fullNameState, emailState]);
 
   const cachedRenderFields = useRef<Map<number, Field & { signature?: Signature | null }>>(new Map());
   const prevShowPendingFieldTooltip = useRef(showPendingFieldTooltip);
@@ -382,17 +380,14 @@ export const EnvelopeSignerPageRenderer = ({ pageData }: { pageData: PageRenderD
           void handleSignatureFieldClick({
             field,
             fullName: fullName.current,
-            signature: signature.current,
             typedSignatureEnabled: envelope.documentMeta.typedSignatureEnabled,
             uploadSignatureEnabled: envelope.documentMeta.uploadSignatureEnabled,
             drawSignatureEnabled: envelope.documentMeta.drawSignatureEnabled,
           })
-            .then(async (result) => {
-              if (!result) {
+            .then(async (payload) => {
+              if (!payload) {
                 return;
               }
-
-              const { isReusableSignature, ...payload } = result;
 
               fieldGroup.add(loadingSpinnerGroup);
 
@@ -405,11 +400,6 @@ export const EnvelopeSignerPageRenderer = ({ pageData }: { pageData: PageRenderD
                   },
                   actionTarget: field.type,
                 });
-
-                // Don't reuse a stamp (or other field-specific value) as the signer's regular signature.
-                if (isReusableSignature) {
-                  setSignature(payload.value);
-                }
               } else {
                 await signField(field.id, payload);
               }
@@ -569,6 +559,29 @@ export const EnvelopeSignerPageRenderer = ({ pageData }: { pageData: PageRenderD
 
     pageLayer.current.batchDraw();
   }, [localPageFields, showPendingFieldTooltip]);
+
+  /**
+   * Open the input of the field requested by "Next field" once it is rendered on this page.
+   */
+  useEffect(() => {
+    if (fieldIdToActivate === null || !localPageFields.some((field) => field.id === fieldIdToActivate)) {
+      return;
+    }
+
+    // Wait for the field to be scrolled into view and drawn before opening it.
+    const timeout = setTimeout(() => {
+      const fieldGroup = pageLayer.current?.findOne<Konva.Group>(`#${fieldIdToActivate}`);
+
+      if (!fieldGroup) {
+        return;
+      }
+
+      setFieldIdToActivate(null);
+      fieldGroup.fire('pointerdown', { target: fieldGroup });
+    }, 400);
+
+    return () => clearTimeout(timeout);
+  }, [fieldIdToActivate, localPageFields]);
 
   /**
    * Rerender the whole page if the selected assistant recipient changes.

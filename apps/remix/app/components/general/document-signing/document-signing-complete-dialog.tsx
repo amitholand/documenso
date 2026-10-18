@@ -1,7 +1,11 @@
 import { useAnalytics } from '@documenso/lib/client-only/hooks/use-analytics';
 import { AppError, AppErrorCode } from '@documenso/lib/errors/app-error';
 import { type TRecipientAccessAuth, ZDocumentAccessAuthSchema } from '@documenso/lib/types/document-auth';
-import { fieldsContainUnsignedRequiredField } from '@documenso/lib/utils/advanced-fields-helpers';
+import { ZFieldMetaSchema } from '@documenso/lib/types/field-meta';
+import {
+  fieldsContainUnsignedRequiredField,
+  isFieldUnsignedAndRequired,
+} from '@documenso/lib/utils/advanced-fields-helpers';
 import { zEmail } from '@documenso/lib/utils/zod';
 import { Button } from '@documenso/ui/primitives/button';
 import {
@@ -13,6 +17,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@documenso/ui/primitives/dialog';
+import { FRIENDLY_FIELD_TYPE } from '@documenso/ui/primitives/document-flow/types';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@documenso/ui/primitives/form/form';
 import { Input } from '@documenso/ui/primitives/input';
 import { useToast } from '@documenso/ui/primitives/use-toast';
@@ -130,6 +135,19 @@ export const DocumentSigningCompleteDialog = ({
 
   const isComplete = useMemo(() => !fieldsContainUnsignedRequiredField(fields), [fields]);
 
+  // Name the field the "Next" button leads to, so signers know what they will fill in.
+  const nextFieldName = useMemo(() => {
+    const nextField = fields.find(isFieldUnsignedAndRequired);
+
+    if (!nextField) {
+      return null;
+    }
+
+    const label = ZFieldMetaSchema.safeParse(nextField.fieldMeta).data?.label;
+
+    return label || i18n._(FRIENDLY_FIELD_TYPE[nextField.type]);
+  }, [fields, i18n]);
+
   const completionRequires2FA = useMemo(
     () => derivedRecipientAccessAuth.includes('TWO_FACTOR_AUTH'),
     [derivedRecipientAccessAuth],
@@ -233,7 +251,15 @@ export const DocumentSigningCompleteDialog = ({
           disabled={disabled}
         >
           {match({ isComplete, role: recipient.role })
-            .with({ isComplete: false }, () => <Trans>Next Field</Trans>)
+            .with({ isComplete: false }, () =>
+              nextFieldName ? (
+                <span className="truncate">
+                  <Trans>Next: {nextFieldName}</Trans>
+                </span>
+              ) : (
+                <Trans>Next Field</Trans>
+              ),
+            )
             .with({ isComplete: true, role: RecipientRole.APPROVER }, () => <Trans>Approve</Trans>)
             .with({ isComplete: true, role: RecipientRole.VIEWER }, () => <Trans>Mark as viewed</Trans>)
             .with({ isComplete: true }, () => <Trans>Complete</Trans>)

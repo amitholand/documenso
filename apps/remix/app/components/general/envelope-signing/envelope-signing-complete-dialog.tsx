@@ -38,6 +38,7 @@ export const EnvelopeSignerCompleteDialog = () => {
     isDirectTemplate,
     envelope,
     setShowPendingFieldTooltip,
+    setFieldIdToActivate,
     recipientFieldsRemaining,
     recipient,
     nextRecipient,
@@ -172,6 +173,11 @@ export const EnvelopeSignerCompleteDialog = () => {
     }
 
     setShowPendingFieldTooltip(true);
+
+    // Checkboxes and radios need the signer to pick an option, so only highlight them.
+    if (nextField.type !== FieldType.CHECKBOX && nextField.type !== FieldType.RADIO) {
+      setFieldIdToActivate(nextField.id);
+    }
 
     setTimeout(
       () => {

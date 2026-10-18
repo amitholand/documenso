@@ -1,11 +1,8 @@
-import { isSignatureFieldType } from '@documenso/prisma/guards/is-signature-field';
 import { Input } from '@documenso/ui/primitives/input';
 import { Label } from '@documenso/ui/primitives/label';
 import { RadioGroup, RadioGroupItem } from '@documenso/ui/primitives/radio-group';
-import { SignaturePadDialog } from '@documenso/ui/primitives/signature-pad/signature-pad-dialog';
 import { Plural, Trans } from '@lingui/react/macro';
 import { RecipientRole } from '@prisma/client';
-import { useMemo } from 'react';
 
 import { useEmbedSigningContext } from '~/components/embed/embed-signing-context';
 
@@ -14,11 +11,7 @@ import { useRequiredEnvelopeSigningContext } from '../document-signing/envelope-
 export default function EnvelopeSignerForm() {
   const {
     fullName,
-    signature,
     setFullName,
-    setSignature,
-    envelope,
-    recipientFields,
     recipient,
     assistantFields,
     assistantRecipients,
@@ -27,10 +20,6 @@ export default function EnvelopeSignerForm() {
   } = useRequiredEnvelopeSigningContext();
 
   const { isNameLocked, isEmailLocked } = useEmbedSigningContext() || {};
-
-  const hasSignatureField = useMemo(() => {
-    return recipientFields.some((field) => isSignatureFieldType(field.type));
-  }, [recipientFields]);
 
   const isSubmitting = false;
 
@@ -105,25 +94,6 @@ export default function EnvelopeSignerForm() {
             onChange={(e) => !isNameLocked && setFullName(e.target.value.trimStart())}
           />
         </div>
-
-        {hasSignatureField && (
-          <div>
-            <Label htmlFor="Signature">
-              <Trans>Signature</Trans>
-            </Label>
-
-            <SignaturePadDialog
-              className="mt-2"
-              disabled={isSubmitting}
-              fullName={fullName}
-              value={signature ?? ''}
-              onChange={(v) => setSignature(v ?? '')}
-              typedSignatureEnabled={envelope.documentMeta.typedSignatureEnabled}
-              uploadSignatureEnabled={envelope.documentMeta.uploadSignatureEnabled}
-              drawSignatureEnabled={envelope.documentMeta.drawSignatureEnabled}
-            />
-          </div>
-        )}
       </div>
     </fieldset>
   );
