@@ -23,7 +23,8 @@ const getImageDimensions = (img: HTMLImageElement, fieldWidth: number, fieldHeig
   let imageWidth = img.width;
   let imageHeight = img.height;
 
-  const scalingFactor = Math.min(fieldWidth / imageWidth, fieldHeight / imageHeight, 1);
+  // Fill the field (keeping the aspect ratio) so resizing the field resizes the signature image.
+  const scalingFactor = Math.min(fieldWidth / imageWidth, fieldHeight / imageHeight);
 
   imageWidth = imageWidth * scalingFactor;
   imageHeight = imageHeight * scalingFactor;

@@ -10,7 +10,7 @@ import { match } from 'ts-pattern';
 
 import { cn } from '../../lib/utils';
 import { useToast } from '../use-toast';
-import { checkSignatureValidity } from './helper';
+import { checkSignatureValidity, toTrimmedDataURL } from './helper';
 
 const MIN_ZOOM = 0.25;
 const MAX_ZOOM = 4;
@@ -164,7 +164,7 @@ export const SignaturePadUpload = ({ className, value, onChange, ...props }: Sig
 
     setIsSignatureValid(isValid);
 
-    onChange?.(isValid ? $el.current.toDataURL() : '');
+    onChange?.(isValid ? toTrimmedDataURL($el.current) : '');
   };
 
   const applyZoom = (nextZoom: number) => {

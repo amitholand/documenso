@@ -9,7 +9,7 @@ import type { MouseEvent, PointerEvent, TouchEvent } from 'react';
 import { useMemo, useRef, useState } from 'react';
 
 import { cn } from '../../lib/utils';
-import { checkSignatureValidity, getSvgPathFromStroke } from './helper';
+import { checkSignatureValidity, getSvgPathFromStroke, toTrimmedDataURL } from './helper';
 import { Point } from './point';
 import { SignaturePadColorPicker } from './signature-pad-color-picker';
 
@@ -135,7 +135,7 @@ export const SignaturePadDraw = ({ className, value, onChange, ...props }: Signa
         setIsSignatureValid(isValidSignature);
 
         if (isValidSignature) {
-          onChange?.($el.current.toDataURL());
+          onChange?.(toTrimmedDataURL($el.current));
         }
         ctx.save();
       }
@@ -205,7 +205,7 @@ export const SignaturePadDraw = ({ className, value, onChange, ...props }: Signa
       ctx?.fill(pathData);
     });
 
-    onChange?.($el.current.toDataURL());
+    onChange?.(toTrimmedDataURL($el.current));
   };
 
   unsafe_useEffectOnce(() => {

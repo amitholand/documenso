@@ -34,6 +34,55 @@ export const checkSignatureValidity = (element: RefObject<HTMLCanvasElement | nu
   return isValid;
 };
 
+/**
+ * Export the canvas as a PNG cropped to the signature, so empty space around it doesn't
+ * make the signature look small once it is placed in a field.
+ */
+export const toTrimmedDataURL = (canvas: HTMLCanvasElement) => {
+  const ctx = canvas.getContext('2d');
+
+  if (!ctx || canvas.width === 0 || canvas.height === 0) {
+    return canvas.toDataURL();
+  }
+
+  const { data, width, height } = ctx.getImageData(0, 0, canvas.width, canvas.height);
+
+  let top = height;
+  let left = width;
+  let right = -1;
+  let bottom = -1;
+
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      if (data[(y * width + x) * 4 + 3] > 0) {
+        top = Math.min(top, y);
+        bottom = Math.max(bottom, y);
+        left = Math.min(left, x);
+        right = Math.max(right, x);
+      }
+    }
+  }
+
+  if (right < 0) {
+    return canvas.toDataURL();
+  }
+
+  const padding = Math.round(Math.max(right - left, bottom - top) * 0.02);
+
+  const cropX = Math.max(0, left - padding);
+  const cropY = Math.max(0, top - padding);
+  const cropWidth = Math.min(width, right + padding + 1) - cropX;
+  const cropHeight = Math.min(height, bottom + padding + 1) - cropY;
+
+  const trimmedCanvas = document.createElement('canvas');
+  trimmedCanvas.width = cropWidth;
+  trimmedCanvas.height = cropHeight;
+
+  trimmedCanvas.getContext('2d')?.drawImage(canvas, cropX, cropY, cropWidth, cropHeight, 0, 0, cropWidth, cropHeight);
+
+  return trimmedCanvas.toDataURL();
+};
+
 export const average = (a: number, b: number) => (a + b) / 2;
 
 export const getSvgPathFromStroke = (points: number[][], closed = true) => {
