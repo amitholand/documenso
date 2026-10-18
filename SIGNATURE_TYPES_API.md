@@ -107,6 +107,17 @@ Save the JSON above as `payload.json`. The response contains the new document ID
 
 The document is created as a **draft**. Nothing is sent yet.
 
+### Email subject with the customer name
+
+`title` is used in the "signing complete" email subject:
+
+```
+החתימה הושלמה: <title>
+```
+
+Put the customer name in `title` (e.g. `"title": "ישראל ישראלי"`) to get `החתימה הושלמה: ישראל ישראלי`.
+The subject is in Hebrew when the document language is Hebrew. Keep `"meta": { "language": "he" }` in the payload.
+
 ---
 
 ## Send it

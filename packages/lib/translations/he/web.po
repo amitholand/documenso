@@ -11221,8 +11221,13 @@ msgstr "תעודת החתימה סופקה על ידי"
 
 #: packages/lib/jobs/definitions/emails/send-document-completed-emails.handler.ts
 #: packages/lib/jobs/definitions/emails/send-document-completed-emails.handler.ts
-msgid "Signing Complete!"
-msgstr "החתימה הושלמה!"
+msgid "Signing Complete: {documentName}"
+msgstr "החתימה הושלמה: {documentName}"
+
+#: packages/lib/jobs/definitions/emails/send-document-completed-emails.handler.ts
+#: packages/lib/jobs/definitions/emails/send-document-completed-emails.handler.ts
+#~ msgid "Signing Complete!"
+#~ msgstr "החתימה הושלמה!"
 
 #: apps/remix/app/routes/_recipient+/sign.$token+/expired.tsx
 msgid "Signing Deadline Expired"

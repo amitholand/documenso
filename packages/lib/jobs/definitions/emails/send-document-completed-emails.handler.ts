@@ -66,6 +66,9 @@ export const run = async ({ payload, io }: { payload: TSendDocumentCompletedEmai
     throw new Error('Document has no recipients');
   }
 
+  // Shown in the email subject, e.g. "Signing Complete: <customer name>". Set via the document title.
+  const documentName = envelope.title;
+
   const { branding, emailLanguage, senderEmail, replyToEmail, organisationId, claims, emailsDisabled, emailTransport } =
     await getEmailContext({
       emailType: 'RECIPIENT',
@@ -147,7 +150,7 @@ export const run = async ({ payload, io }: { payload: TSendDocumentCompletedEmai
       ],
       from: senderEmail,
       replyTo: replyToEmail,
-      subject: i18n._(msg`Signing Complete!`),
+      subject: i18n._(msg`Signing Complete: ${documentName}`),
       html,
       text,
       attachments: completedDocumentEmailAttachments,
@@ -247,7 +250,7 @@ export const run = async ({ payload, io }: { payload: TSendDocumentCompletedEmai
         subject:
           isDirectTemplate && envelope.documentMeta?.subject
             ? renderCustomEmailTemplate(envelope.documentMeta.subject, customEmailTemplate)
-            : i18n._(msg`Signing Complete!`),
+            : i18n._(msg`Signing Complete: ${documentName}`),
         html,
         text,
         attachments: completedDocumentEmailAttachments,
