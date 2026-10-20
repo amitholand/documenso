@@ -37,6 +37,12 @@ export type CertificateRecipient = {
     signature?: Pick<Signature, 'signatureImageAsBase64' | 'typedSignature'> | null;
   };
   authLevel: string;
+  consent: {
+    createdAt: Date;
+    textsSha256: string;
+    stamp?: { companyName: string; companyNumber: string; role: string };
+    stampNotVerifiedText?: string;
+  } | null;
   logs: {
     emailed: BaseAuditLog | null;
     sent: BaseAuditLog | null;
@@ -49,6 +55,7 @@ export type CertificateRecipient = {
 type GenerateCertificateOptions = {
   recipients: CertificateRecipient[];
   envelopeId: string;
+  auditTrailHash: string | null;
   qrToken: string | null;
   hidePoweredBy: boolean;
   i18n: I18n;
@@ -463,6 +470,26 @@ const renderColumnThree = (options: RenderColumnOptions) => {
     });
   }
 
+  if (recipient.consent) {
+    itemsToRender.push({
+      label: i18n._(msg`Signing consent approved`),
+      value: `${DateTime.fromJSDate(recipient.consent.createdAt)
+        .setLocale(APP_I18N_OPTIONS.defaultLocale)
+        .toFormat('yyyy-MM-dd hh:mm:ss a (ZZZZ)')}\nSHA-256: ${recipient.consent.textsSha256}`,
+    });
+  }
+
+  if (recipient.consent?.stamp) {
+    const { companyName, companyNumber, role } = recipient.consent.stamp;
+
+    itemsToRender.push({
+      label: i18n._(msg`Company stamp authority declared`),
+      value: [`${companyName} (${companyNumber}), ${role}`, recipient.consent.stampNotVerifiedText]
+        .filter(Boolean)
+        .join('\n'),
+    });
+  }
+
   const isOwner = recipient.email.toLowerCase() === envelopeOwner.email.toLowerCase();
 
   itemsToRender.push({
@@ -718,6 +745,7 @@ const renderTables = (options: RenderTablesOptions) => {
 export async function renderCertificate({
   recipients,
   envelopeId,
+  auditTrailHash,
   qrToken,
   hidePoweredBy,
   i18n,
@@ -759,6 +787,13 @@ export async function renderCertificate({
   const brandingTopPadding = 24;
 
   const pages: Uint8Array[] = [];
+
+  const footerLabel = [
+    `${i18n._(msg`Envelope ID`)}: ${envelopeId}`,
+    auditTrailHash ? `${i18n._(msg`Audit trail SHA-256`)}: ${auditTrailHash}` : null,
+  ]
+    .filter(Boolean)
+    .join('   ');
 
   let isQrPlaced = false;
 
@@ -806,7 +841,7 @@ export async function renderCertificate({
     const footerText = new Konva.Text({
       x: margin,
       y: pageHeight - textXs - 10,
-      text: `${i18n._(msg`Envelope ID`)}: ${envelopeId}`,
+      text: footerLabel,
       fontFamily: 'Inter',
       fontSize: textXs,
       fill: textMutedForegroundLight,
@@ -834,7 +869,7 @@ export async function renderCertificate({
     const overflowFooterText = new Konva.Text({
       x: margin,
       y: pageHeight - textXs - 10,
-      text: `${i18n._(msg`Envelope ID`)}: ${envelopeId}`,
+      text: footerLabel,
       fontFamily: 'Inter',
       fontSize: textXs,
       fill: textMutedForegroundLight,

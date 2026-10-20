@@ -589,6 +589,15 @@ msgid "{user} approved the document"
 msgstr "{user} a approuvé le document"
 
 #: packages/lib/utils/document-audit-logs.ts
+msgid "{user} approved the signing consent"
+msgstr ""
+
+#. placeholder {0}: data.stamp.companyName
+#: packages/lib/utils/document-audit-logs.ts
+msgid "{user} approved the signing consent and declared authority to use the stamp of {0}"
+msgstr ""
+
+#: packages/lib/utils/document-audit-logs.ts
 msgid "{user} authenticated with the signing provider"
 msgstr "{user} s’est authentifié auprès du fournisseur de signature"
 
@@ -1793,6 +1802,10 @@ msgstr "Permettre aux signataires de désigner le prochain signataire"
 msgid "Allowed Email Domains"
 msgstr "Domaines email autorisés"
 
+#: apps/remix/app/components/forms/editor/editor-field-signature-form.tsx
+msgid "Allowed signature types"
+msgstr ""
+
 #: apps/remix/app/components/embed/authoring/configure-document-advanced-settings.tsx
 #: apps/remix/app/components/general/envelope-editor/envelope-editor-settings-dialog.tsx
 #: packages/ui/primitives/document-flow/add-settings.tsx
@@ -1838,8 +1851,8 @@ msgid "An administrator has created a Documenso account for you."
 msgstr "Un administrateur a créé un compte Documenso pour vous."
 
 #: apps/remix/app/routes/_unauthenticated+/articles.signature-disclosure.tsx
-msgid "An electronic signature provided by you on our platform, achieved through clicking through to a document and entering your name, or any other electronic signing method we provide, is legally binding. It carries the same weight and enforceability as a manual signature written with ink on paper."
-msgstr "Une signature électronique fournie par vous sur notre plateforme, obtenue en cliquant sur un document et en saisissant votre nom, ou toute autre méthode de signature électronique que nous fournis, est juridiquement contraignante. Elle a le même poids et la même force exécutoire qu'une signature manuelle écrite à l'encre sur papier."
+msgid "An electronic signature provided by you on our platform, achieved through clicking through to a document and entering your name, or any other electronic signing method we provide, binds you as your signature. Some documents require a special form by law, such as real estate transactions, wills or notarised documents, and may not be signed this way."
+msgstr ""
 
 #: apps/remix/app/routes/_unauthenticated+/articles.signature-disclosure.tsx
 msgid "An email account"
@@ -2432,6 +2445,10 @@ msgstr "Détails du journal d’audit"
 #: apps/remix/app/routes/_authenticated+/admin+/documents.$id.tsx
 msgid "Audit Logs"
 msgstr "Journaux de vérification"
+
+#: packages/lib/server-only/pdf/render-certificate.ts
+msgid "Audit trail SHA-256"
+msgstr ""
 
 #: apps/remix/app/routes/_internal+/[__htmltopdf]+/certificate.tsx
 #: packages/lib/server-only/pdf/render-certificate.ts
@@ -3140,6 +3157,22 @@ msgstr ""
 
 #: apps/remix/app/components/general/settings-upsell/branding-upsell.tsx
 msgid "Company details and website in email footers"
+msgstr ""
+
+#: apps/remix/app/components/general/document-signing/document-signing-complete-dialog.tsx
+msgid "Company name"
+msgstr ""
+
+#: apps/remix/app/components/general/document-signing/document-signing-complete-dialog.tsx
+msgid "Company number"
+msgstr ""
+
+#: apps/remix/app/components/general/document-signing/document-signing-complete-dialog.tsx
+msgid "Company stamp authority"
+msgstr ""
+
+#: packages/lib/server-only/pdf/render-certificate.ts
+msgid "Company stamp authority declared"
 msgstr ""
 
 #: apps/remix/app/components/dialogs/organisation-create-dialog.tsx
@@ -5189,6 +5222,7 @@ msgstr "Glissez-déposez ou cliquez pour importer"
 msgid "Drag and drop your document here"
 msgstr "Faites glisser et déposez votre document ici"
 
+#: apps/remix/app/components/forms/editor/editor-field-signature-form.tsx
 #: packages/lib/constants/document.ts
 #: packages/ui/primitives/signature-pad/signature-pad.tsx
 msgctxt "Draw signature"
@@ -5844,7 +5878,6 @@ msgstr "Enveloppe distribuée"
 #: packages/lib/server-only/pdf/render-audit-logs.ts
 #: packages/lib/server-only/pdf/render-audit-logs.ts
 #: packages/lib/server-only/pdf/render-audit-logs.ts
-#: packages/lib/server-only/pdf/render-certificate.ts
 #: packages/lib/server-only/pdf/render-certificate.ts
 msgid "Envelope ID"
 msgstr "ID de l'enveloppe"
@@ -6624,6 +6657,10 @@ msgstr "Groupes"
 msgid "Having an assistant as the last signer means they will be unable to take any action as there are no subsequent signers to assist."
 msgstr "Avoir un assistant comme dernier signataire signifie qu'il ne pourra rien faire car il n'y a pas d'autres signataires à assister."
 
+#: packages/lib/constants/i18n.ts
+msgid "Hebrew"
+msgstr ""
+
 #: apps/remix/app/components/general/envelope-editor/envelope-editor-fields-page.tsx
 #: packages/ui/primitives/document-flow/field-item.tsx
 msgid "Height:"
@@ -7325,6 +7362,10 @@ msgstr "En savoir plus"
 msgid "Leave"
 msgstr "Quitter"
 
+#: apps/remix/app/components/forms/editor/editor-field-signature-form.tsx
+msgid "Leave all unchecked to use the document settings. Select only Upload for a company stamp."
+msgstr ""
+
 #: apps/remix/app/components/forms/branding-preferences-form.tsx
 #: apps/remix/app/components/forms/branding-preferences-form.tsx
 #: apps/remix/app/components/forms/branding-preferences-form.tsx
@@ -8021,6 +8062,10 @@ msgstr "Email du destinataire suivant"
 #: apps/remix/app/components/general/document-signing/document-signing-complete-dialog.tsx
 msgid "Next Recipient Name"
 msgstr "Nom du destinataire suivant"
+
+#: apps/remix/app/components/general/document-signing/document-signing-complete-dialog.tsx
+msgid "Next: {nextFieldName}"
+msgstr ""
 
 #: apps/remix/app/components/forms/branding-preferences-form.tsx
 #: apps/remix/app/components/forms/certificate-preferences-form.tsx
@@ -9353,7 +9398,9 @@ msgid "Primary Foreground"
 msgstr "Premier plan principal"
 
 #: apps/remix/app/components/forms/signup.tsx
+#: apps/remix/app/components/general/document-signing/document-signing-complete-dialog.tsx
 #: apps/remix/app/components/general/public-legal-links.tsx
+#: apps/remix/app/routes/_unauthenticated+/articles.privacy.tsx
 msgid "Privacy Policy"
 msgstr ""
 
@@ -9592,6 +9639,15 @@ msgstr "Authentification d'action de destinataire"
 #: packages/lib/utils/document-audit-logs.ts
 msgid "Recipient approved the document"
 msgstr "Le destinataire a approuvé le document"
+
+#: packages/lib/utils/document-audit-logs.ts
+msgid "Recipient approved the signing consent"
+msgstr ""
+
+#. placeholder {0}: data.stamp.companyName
+#: packages/lib/utils/document-audit-logs.ts
+msgid "Recipient approved the signing consent and declared authority to use the stamp of {0}"
+msgstr ""
 
 #: packages/lib/utils/document-audit-logs.ts
 msgid "Recipient authenticated with the signing provider"
@@ -10041,6 +10097,10 @@ msgstr "Exiger une clé d’accès"
 #: packages/lib/constants/document-auth.ts
 msgid "Require password"
 msgstr "Exiger un mot de passe"
+
+#: apps/remix/app/components/general/document-signing/document-signing-complete-dialog.tsx
+msgid "Required"
+msgstr ""
 
 #: packages/ui/primitives/document-flow/field-items-advanced-settings/checkbox-field.tsx
 #: packages/ui/primitives/document-flow/field-items-advanced-settings/dropdown-field.tsx
@@ -10941,6 +11001,10 @@ msgstr ""
 msgid "Showing {visibleCount} of {totalCount} teams"
 msgstr ""
 
+#: apps/remix/app/components/forms/editor/editor-field-signature-form.tsx
+msgid "Shown on the field and in the signing dialog, e.g. \"Company stamp\""
+msgstr ""
+
 #: apps/remix/app/components/dialogs/sign-field-signature-dialog.tsx
 #: apps/remix/app/components/general/document-signing/document-signing-auth-2fa.tsx
 #: apps/remix/app/components/general/document-signing/document-signing-auth-passkey.tsx
@@ -11097,7 +11161,6 @@ msgstr "S'inscrire avec OIDC"
 #: apps/remix/app/components/general/document-signing/document-signing-form.tsx
 #: apps/remix/app/components/general/document-signing/document-signing-signature-field.tsx
 #: apps/remix/app/components/general/envelope-editor/envelope-editor-fields-drag-drop.tsx
-#: apps/remix/app/components/general/envelope-signing/envelope-signer-form.tsx
 #: apps/remix/app/components/tables/admin-document-recipient-item-table.tsx
 #: apps/remix/app/routes/_internal+/[__htmltopdf]+/certificate.tsx
 #: packages/lib/server-only/pdf/render-certificate.ts
@@ -11206,8 +11269,12 @@ msgstr "Certificat de signature fourni par"
 
 #: packages/lib/jobs/definitions/emails/send-document-completed-emails.handler.ts
 #: packages/lib/jobs/definitions/emails/send-document-completed-emails.handler.ts
-msgid "Signing Complete!"
-msgstr "Signature Complète !"
+msgid "Signing Complete: {documentName}"
+msgstr ""
+
+#: packages/lib/server-only/pdf/render-certificate.ts
+msgid "Signing consent approved"
+msgstr ""
 
 #: apps/remix/app/routes/_recipient+/sign.$token+/expired.tsx
 msgid "Signing Deadline Expired"
@@ -12077,6 +12144,11 @@ msgstr "Modèles partiellement supprimés"
 msgid "Terms of Service"
 msgstr ""
 
+#: apps/remix/app/components/general/document-signing/document-signing-complete-dialog.tsx
+#: apps/remix/app/routes/_unauthenticated+/articles.terms.tsx
+msgid "Terms of Use"
+msgstr ""
+
 #: apps/remix/app/routes/_authenticated+/t.$teamUrl+/settings.webhooks.$id._index.tsx
 msgid "Test"
 msgstr "Test"
@@ -12721,6 +12793,10 @@ msgstr "Cette action n'est pas réversible. Veuillez être sûr."
 #: apps/remix/app/components/dialogs/admin-user-disable-dialog.tsx
 msgid "This action is reversible, but please be careful as the account may be affected permanently (e.g. their settings and contents not being restored properly)."
 msgstr "Cette action est réversible, mais veuillez faire attention car le compte peut être affecté de façon permanente <b>(</b>par exemple, leurs paramètres et contenus ne pourraient pas être restaurés correctement)."
+
+#: apps/remix/app/components/general/document-signing/document-signing-complete-dialog.tsx
+msgid "This approval is required"
+msgstr ""
 
 #: apps/remix/app/components/dialogs/ai-field-detection-dialog.tsx
 #: apps/remix/app/components/dialogs/ai-recipient-detection-dialog.tsx
@@ -13420,6 +13496,7 @@ msgstr "Ré-authentification à deux facteurs"
 msgid "Type"
 msgstr "Type"
 
+#: apps/remix/app/components/forms/editor/editor-field-signature-form.tsx
 #: packages/lib/constants/document.ts
 #: packages/ui/primitives/signature-pad/signature-pad.tsx
 msgctxt "Type signature"
@@ -13810,6 +13887,7 @@ msgstr "Mettez à niveau votre plan pour importer plus de documents"
 msgid "Upload"
 msgstr "Importer"
 
+#: apps/remix/app/components/forms/editor/editor-field-signature-form.tsx
 #: packages/lib/constants/document.ts
 #: packages/ui/primitives/signature-pad/signature-pad.tsx
 msgctxt "Upload signature"
@@ -14909,8 +14987,8 @@ msgid "When you sign a document, we can automatically fill in and sign the follo
 msgstr "Lorsque vous signez un document, nous pouvons automatiquement remplir et signer les champs suivants à l'aide des informations déjà fournies. Vous pouvez également signer manuellement ou supprimer les champs signés automatiquement par la suite si vous le souhaitez."
 
 #: apps/remix/app/routes/_unauthenticated+/articles.signature-disclosure.tsx
-msgid "When you use our platform to affix your electronic signature to documents, you are consenting to do so under the Electronic Signatures in Global and National Commerce Act (E-Sign Act) and other applicable laws. This action indicates your agreement to use electronic means to sign documents and receive notifications."
-msgstr "Lorsque vous utilisez notre plateforme pour apposer votre signature électronique sur des documents, vous consentez à le faire conformément à la loi sur les signatures électroniques dans le commerce mondial et national (E-Sign Act) et aux autres lois applicables. Cette action indique votre accord à utiliser des moyens électroniques pour signer des documents et recevoir des notifications."
+msgid "When you use our platform to affix your electronic signature to documents, you are consenting to do so under the Israeli Electronic Signature Law, 5761-2001, and other applicable laws. This action indicates your agreement to use electronic means to sign documents and receive notifications."
+msgstr ""
 
 #: apps/remix/app/routes/_authenticated+/o.$orgUrl.settings.sso.tsx
 msgid "Whether to enable the SSO portal for your organisation"
@@ -14980,6 +15058,15 @@ msgstr "Vous avez ajouté un destinataire"
 #: packages/lib/utils/document-audit-logs.ts
 msgid "You approved the document"
 msgstr "Vous avez approuvé le document"
+
+#: packages/lib/utils/document-audit-logs.ts
+msgid "You approved the signing consent"
+msgstr ""
+
+#. placeholder {0}: data.stamp.companyName
+#: packages/lib/utils/document-audit-logs.ts
+msgid "You approved the signing consent and declared authority to use the stamp of {0}"
+msgstr ""
 
 #: apps/remix/app/components/dialogs/envelope-cancel-dialog.tsx
 msgid "You are about to cancel <0>\"{title}\"</0>"
@@ -16155,6 +16242,10 @@ msgstr ""
 #: packages/lib/utils/document-audit-logs.ts
 msgid "Your remote signature was applied"
 msgstr "Votre signature à distance a été appliquée"
+
+#: apps/remix/app/components/general/document-signing/document-signing-complete-dialog.tsx
+msgid "Your role"
+msgstr ""
 
 #: apps/remix/app/components/general/document-signing/csc-recipient-signing-in-progress-page.tsx
 #: apps/remix/app/components/general/envelope-signing/envelope-signing-csc-status.tsx

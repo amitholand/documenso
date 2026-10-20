@@ -29,8 +29,8 @@ export default function SignatureDisclosure() {
         <p>
           <Trans>
             When you use our platform to affix your electronic signature to documents, you are consenting to do so under
-            the Electronic Signatures in Global and National Commerce Act (E-Sign Act) and other applicable laws. This
-            action indicates your agreement to use electronic means to sign documents and receive notifications.
+            the Israeli Electronic Signature Law, 5761-2001, and other applicable laws. This action indicates your
+            agreement to use electronic means to sign documents and receive notifications.
           </Trans>
         </p>
 
@@ -40,8 +40,9 @@ export default function SignatureDisclosure() {
         <p>
           <Trans>
             An electronic signature provided by you on our platform, achieved through clicking through to a document and
-            entering your name, or any other electronic signing method we provide, is legally binding. It carries the
-            same weight and enforceability as a manual signature written with ink on paper.
+            entering your name, or any other electronic signing method we provide, binds you as your signature. Some
+            documents require a special form by law, such as real estate transactions, wills or notarised documents, and
+            may not be signed this way.
           </Trans>
         </p>
 

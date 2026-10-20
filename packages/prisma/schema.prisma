@@ -542,6 +542,11 @@ model DocumentAuditLog {
   userAgent String?
   ipAddress String?
 
+  /// Tamper-evident hash chain, set by a database trigger on insert. Rows are immutable.
+  chainIndex   Int?
+  previousHash String?
+  hash         String?
+
   envelope Envelope? @relation(fields: [envelopeId], references: [id], onDelete: SetNull)
 
   @@index([envelopeId])

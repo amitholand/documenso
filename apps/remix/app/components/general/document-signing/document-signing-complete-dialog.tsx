@@ -1,4 +1,12 @@
 import { useAnalytics } from '@documenso/lib/client-only/hooks/use-analytics';
+import { NEXT_PUBLIC_PRIVACY_POLICY_URL, NEXT_PUBLIC_TERMS_OF_SERVICE_URL } from '@documenso/lib/constants/app';
+import { getLegalEntity, LEGAL_PRIVACY_PATH, LEGAL_TERMS_PATH } from '@documenso/lib/constants/legal-entity';
+import {
+  fillStampAuthorityText,
+  getSigningConsentLocale,
+  isStampSignatureField,
+  SIGNING_CONSENT_TEXTS,
+} from '@documenso/lib/constants/signing-consent';
 import { AppError, AppErrorCode } from '@documenso/lib/errors/app-error';
 import { type TRecipientAccessAuth, ZDocumentAccessAuthSchema } from '@documenso/lib/types/document-auth';
 import { ZFieldMetaSchema } from '@documenso/lib/types/field-meta';
@@ -7,7 +15,9 @@ import {
   isFieldUnsignedAndRequired,
 } from '@documenso/lib/utils/advanced-fields-helpers';
 import { zEmail } from '@documenso/lib/utils/zod';
+import { trpc } from '@documenso/trpc/react';
 import { Button } from '@documenso/ui/primitives/button';
+import { Checkbox } from '@documenso/ui/primitives/checkbox';
 import {
   Dialog,
   DialogContent,
@@ -27,7 +37,7 @@ import type { Field, Recipient } from '@prisma/client';
 import { RecipientRole } from '@prisma/client';
 import type { ReactNode } from 'react';
 import { useMemo, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { type Control, useForm } from 'react-hook-form';
 import { match } from 'ts-pattern';
 import { z } from 'zod';
 
@@ -64,6 +74,12 @@ export type DocumentSigningCompleteDialogProps = {
   position?: 'start' | 'end' | 'center';
   disableNameInput?: boolean;
 
+  /** Whether the recipient uploaded a company stamp. Defaults to checking `fields`. */
+  hasStampSignature?: boolean;
+
+  /** Direct templates create the recipient on completion, so consent can't be recorded beforehand. */
+  skipConsentRecording?: boolean;
+
   /** When provided, replaces the confirmation form (and 2FA step) as the dialog body. */
   children?: ReactNode;
 
@@ -85,6 +101,41 @@ const ZDirectRecipientFormSchema = z.object({
 
 type TDirectRecipientFormSchema = z.infer<typeof ZDirectRecipientFormSchema>;
 
+const ZSigningConsentFormSchema = z.object({
+  hasStamp: z.boolean(),
+  electronicSignature: z.boolean(),
+  termsAndPrivacy: z.boolean(),
+  stampAuthority: z.boolean(),
+  companyName: z.string().trim(),
+  companyNumber: z.string().trim(),
+  role: z.string().trim(),
+});
+
+const buildSigningConsentFormSchema = (messages: { approvalRequired: string; required: string }) =>
+  ZSigningConsentFormSchema.superRefine((data, ctx) => {
+    for (const key of ['electronicSignature', 'termsAndPrivacy'] as const) {
+      if (!data[key]) {
+        ctx.addIssue({ code: 'custom', path: [key], message: messages.approvalRequired });
+      }
+    }
+
+    if (!data.hasStamp) {
+      return;
+    }
+
+    if (!data.stampAuthority) {
+      ctx.addIssue({ code: 'custom', path: ['stampAuthority'], message: messages.approvalRequired });
+    }
+
+    for (const key of ['companyName', 'companyNumber', 'role'] as const) {
+      if (!data[key]) {
+        ctx.addIssue({ code: 'custom', path: [key], message: messages.required });
+      }
+    }
+  });
+
+type TSigningConsentFormSchema = z.infer<typeof ZSigningConsentFormSchema>;
+
 export const DocumentSigningCompleteDialog = ({
   isSubmitting,
   documentTitle,
@@ -99,6 +150,8 @@ export const DocumentSigningCompleteDialog = ({
   buttonSize = 'lg',
   position,
   disableNameInput = false,
+  hasStampSignature,
+  skipConsentRecording = false,
   children,
   onOpenChange,
 }: DocumentSigningCompleteDialogProps) => {
@@ -135,6 +188,42 @@ export const DocumentSigningCompleteDialog = ({
 
   const isComplete = useMemo(() => !fieldsContainUnsignedRequiredField(fields), [fields]);
 
+  const requiresConsent = recipient.role === RecipientRole.SIGNER;
+
+  const hasStamp = useMemo(
+    () => hasStampSignature ?? fields.some((field) => field.inserted && isStampSignatureField(field)),
+    [hasStampSignature, fields],
+  );
+
+  const consentTexts = SIGNING_CONSENT_TEXTS[getSigningConsentLocale(i18n.locale)];
+
+  const consentForm = useForm<TSigningConsentFormSchema>({
+    resolver: zodResolver(
+      buildSigningConsentFormSchema({
+        approvalRequired: t`This approval is required`,
+        required: t`Required`,
+      }),
+    ),
+    defaultValues: {
+      hasStamp,
+      electronicSignature: false,
+      termsAndPrivacy: false,
+      stampAuthority: false,
+      companyName: '',
+      companyNumber: '',
+      role: '',
+    },
+  });
+
+  const stampDeclaration = consentForm.watch(['companyName', 'companyNumber', 'role']);
+
+  const { mutateAsync: recordSigningConsent } = trpc.recipient.recordSigningConsent.useMutation();
+
+  // Fall back to the built-in legal pages once the operating entity is configured.
+  const hasLegalEntity = Boolean(getLegalEntity());
+  const termsOfServiceUrl = NEXT_PUBLIC_TERMS_OF_SERVICE_URL() ?? (hasLegalEntity ? LEGAL_TERMS_PATH : undefined);
+  const privacyPolicyUrl = NEXT_PUBLIC_PRIVACY_POLICY_URL() ?? (hasLegalEntity ? LEGAL_PRIVACY_PATH : undefined);
+
   // Name the field the "Next" button leads to, so signers know what they will fill in.
   const nextFieldName = useMemo(() => {
     const nextField = fields.find(isFieldUnsignedAndRequired);
@@ -163,6 +252,8 @@ export const DocumentSigningCompleteDialog = ({
         name: defaultNextSigner?.name ?? '',
         email: defaultNextSigner?.email ?? '',
       });
+
+      consentForm.setValue('hasStamp', hasStamp);
     }
 
     setShowDialog(open);
@@ -187,6 +278,14 @@ export const DocumentSigningCompleteDialog = ({
         recipientOverridePayload = recipientPayload;
       }
 
+      if (requiresConsent) {
+        const isConsentValid = await consentForm.trigger();
+
+        if (!isConsentValid) {
+          return;
+        }
+      }
+
       // Check if 2FA is required
       if (completionRequires2FA && !data.accessAuthOptions) {
         setShowTwoFactorForm(true);
@@ -195,6 +294,18 @@ export const DocumentSigningCompleteDialog = ({
 
       const nextSigner =
         allowDictateNextSigner && data.name && data.email ? { name: data.name, email: data.email } : undefined;
+
+      if (requiresConsent && !skipConsentRecording) {
+        const consent = consentForm.getValues();
+
+        await recordSigningConsent({
+          token: recipient.token,
+          locale: i18n.locale,
+          stamp: hasStamp
+            ? { companyName: consent.companyName, companyNumber: consent.companyNumber, role: consent.role }
+            : undefined,
+        });
+      }
 
       await onSignatureComplete(nextSigner, data.accessAuthOptions, recipientOverridePayload);
     } catch (error) {
@@ -414,7 +525,120 @@ export const DocumentSigningCompleteDialog = ({
                     </div>
                   )}
 
-                  <DocumentSigningDisclosure />
+                  {requiresConsent ? (
+                    <Form {...consentForm}>
+                      <div className="flex flex-col gap-3">
+                        {hasStamp && (
+                          <div className="flex flex-col gap-3 rounded-lg border border-border p-3">
+                            <p className="font-medium text-sm">
+                              <Trans>Company stamp authority</Trans>
+                            </p>
+
+                            <div className="flex flex-col gap-3 md:flex-row">
+                              <FormField
+                                control={consentForm.control}
+                                name="companyName"
+                                render={({ field }) => (
+                                  <FormItem className="flex-1">
+                                    <FormLabel>
+                                      <Trans>Company name</Trans>
+                                    </FormLabel>
+                                    <FormControl>
+                                      <Input {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+
+                              <FormField
+                                control={consentForm.control}
+                                name="companyNumber"
+                                render={({ field }) => (
+                                  <FormItem className="flex-1">
+                                    <FormLabel>
+                                      <Trans>Company number</Trans>
+                                    </FormLabel>
+                                    <FormControl>
+                                      <Input {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+
+                              <FormField
+                                control={consentForm.control}
+                                name="role"
+                                render={({ field }) => (
+                                  <FormItem className="flex-1">
+                                    <FormLabel>
+                                      <Trans>Your role</Trans>
+                                    </FormLabel>
+                                    <FormControl>
+                                      <Input {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                            </div>
+
+                            <SigningConsentCheckbox
+                              control={consentForm.control}
+                              name="stampAuthority"
+                              text={fillStampAuthorityText(consentTexts.stampAuthority, {
+                                companyName: stampDeclaration[0] || '___',
+                                companyNumber: stampDeclaration[1] || '___',
+                                role: stampDeclaration[2] || '___',
+                              })}
+                            />
+
+                            <p className="text-muted-foreground text-xs">{consentTexts.stampNotVerified}</p>
+                          </div>
+                        )}
+
+                        <SigningConsentCheckbox
+                          control={consentForm.control}
+                          name="electronicSignature"
+                          text={consentTexts.electronicSignature}
+                        />
+
+                        <SigningConsentCheckbox
+                          control={consentForm.control}
+                          name="termsAndPrivacy"
+                          text={consentTexts.termsAndPrivacy}
+                        >
+                          {(termsOfServiceUrl || privacyPolicyUrl) && (
+                            <span className="mt-1 flex gap-3">
+                              {termsOfServiceUrl && (
+                                <a
+                                  className="text-documenso-700 underline"
+                                  href={termsOfServiceUrl}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                >
+                                  <Trans>Terms of Use</Trans>
+                                </a>
+                              )}
+                              {privacyPolicyUrl && (
+                                <a
+                                  className="text-documenso-700 underline"
+                                  href={privacyPolicyUrl}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                >
+                                  <Trans>Privacy Policy</Trans>
+                                </a>
+                              )}
+                            </span>
+                          )}
+                        </SigningConsentCheckbox>
+                      </div>
+                    </Form>
+                  ) : (
+                    <DocumentSigningDisclosure />
+                  )}
 
                   <DialogFooter className="mt-4">
                     <Button
@@ -442,5 +666,41 @@ export const DocumentSigningCompleteDialog = ({
           ))}
       </DialogContent>
     </Dialog>
+  );
+};
+
+type SigningConsentCheckboxProps = {
+  control: Control<TSigningConsentFormSchema>;
+  name: 'electronicSignature' | 'termsAndPrivacy' | 'stampAuthority';
+  text: string;
+  children?: ReactNode;
+};
+
+const SigningConsentCheckbox = ({ control, name, text, children }: SigningConsentCheckboxProps) => {
+  return (
+    <FormField
+      control={control}
+      name={name}
+      render={({ field }) => (
+        <FormItem>
+          <div className="flex items-start gap-2">
+            <FormControl>
+              <Checkbox
+                id={`signing-consent-${name}`}
+                className="mt-0.5"
+                checked={field.value === true}
+                onCheckedChange={(checked) => field.onChange(checked === true)}
+              />
+            </FormControl>
+
+            <label htmlFor={`signing-consent-${name}`} className="flex flex-col text-muted-foreground text-xs">
+              {text}
+              {children}
+            </label>
+          </div>
+          <FormMessage />
+        </FormItem>
+      )}
+    />
   );
 };

@@ -415,6 +415,7 @@ export const DirectTemplateSigningForm = ({
           <DocumentSigningCompleteDialog
             isSubmitting={isSubmitting}
             onSignatureComplete={async (nextSigner) => handleSubmit(nextSigner)}
+            skipConsentRecording
             documentTitle={template.title}
             fields={localFields}
             fieldsValidated={fieldsValidated}

@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import path from 'node:path';
 import { PDFDocument } from '@cantoo/pdf-lib';
 import { finalizeTspEnvelopeCompletion } from '@documenso/ee/server-only/signing/csc/finalize-tsp-completion';
@@ -208,7 +209,12 @@ export const run = async ({ payload, io }: { payload: TSealDocumentJobDefinition
     const needsCertificate = settings.includeSigningCertificate;
     const needsAuditLog = settings.includeAuditLog;
 
-    const newDocumentData: Array<{ oldDocumentDataId: string; newDocumentDataId: string }> = [];
+    const newDocumentData: Array<{
+      oldDocumentDataId: string;
+      newDocumentDataId: string;
+      originalSha256: string;
+      sealedSha256: string;
+    }> = [];
 
     for (const { envelopeItem, pdfData } of prefetchedItems) {
       const envelopeItemFields = envelope.envelopeItems.find((item) => item.id === envelopeItem.id)?.field;
@@ -288,6 +294,13 @@ export const run = async ({ payload, io }: { payload: TSealDocumentJobDefinition
       newDocumentData.push(result);
     }
 
+    const sealedDocumentsSha256 = newDocumentData.map((result, index) => ({
+      envelopeItemId: prefetchedItems[index].envelopeItem.id,
+      title: prefetchedItems[index].envelopeItem.title,
+      originalSha256: result.originalSha256,
+      sealedSha256: result.sealedSha256,
+    }));
+
     await prisma.$transaction(async (tx) => {
       for (const { oldDocumentDataId, newDocumentDataId } of newDocumentData) {
         await tx.envelopeItem.update({
@@ -312,7 +325,13 @@ export const run = async ({ payload, io }: { payload: TSealDocumentJobDefinition
       });
 
       await tx.documentAuditLog.create({
-        data: envelopeCompletedAuditLog,
+        data: {
+          ...envelopeCompletedAuditLog,
+          data: {
+            ...envelopeCompletedAuditLog.data,
+            sealedDocumentsSha256,
+          },
+        },
       });
     });
 
@@ -381,6 +400,9 @@ const decorateAndSignPdf = async ({
   certificateDoc,
   auditLogDoc,
 }: DecorateAndSignPdfOptions) => {
+  // Hash the signed content before any decoration touches the bytes.
+  const originalSha256 = createHash('sha256').update(pdfData).digest('hex');
+
   let pdfDoc = await PDF.load(pdfData);
 
   // Normalize and flatten layers that could cause issues with the signature
@@ -507,5 +529,7 @@ const decorateAndSignPdf = async ({
   return {
     oldDocumentDataId: envelopeItem.documentData.id,
     newDocumentDataId: newDocumentData.id,
+    originalSha256,
+    sealedSha256: createHash('sha256').update(pdfBytes).digest('hex'),
   };
 };

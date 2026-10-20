@@ -7,6 +7,7 @@ import { deleteEnvelopeRecipient } from '@documenso/lib/server-only/recipient/de
 import { getRecipientById } from '@documenso/lib/server-only/recipient/get-recipient-by-id';
 import { setDocumentRecipients } from '@documenso/lib/server-only/recipient/set-document-recipients';
 import { setTemplateRecipients } from '@documenso/lib/server-only/recipient/set-template-recipients';
+import { assertRecipientSigningConsent } from '@documenso/lib/server-only/recipient/signing-consent';
 import { updateEnvelopeRecipients } from '@documenso/lib/server-only/recipient/update-envelope-recipients';
 import { assertSenderNotDisabled } from '@documenso/lib/server-only/user/assert-user-not-disabled';
 import { isTspEnvelope } from '@documenso/lib/types/signature-level';
@@ -16,6 +17,7 @@ import { EnvelopeType } from '@prisma/client';
 import { ZGenericSuccessResponse, ZSuccessResponseSchema } from '../schema';
 import { authenticatedProcedure, procedure, router } from '../trpc';
 import { findRecipientSuggestionsRoute } from './find-recipient-suggestions';
+import { recordSigningConsentRoute } from './record-signing-consent';
 import {
   ZCompleteDocumentWithTokenMutationSchema,
   ZCompleteDocumentWithTokenResponseSchema,
@@ -584,6 +586,8 @@ export const recipientRouter = router({
       });
     }),
 
+  recordSigningConsent: recordSigningConsentRoute,
+
   /**
    * @private
    */
@@ -625,6 +629,9 @@ export const recipientRouter = router({
         // Checked here as well as inside `completeDocumentWithToken` so the
         // TSP branch below is covered.
         await assertSenderNotDisabled({ userId: envelope.userId });
+
+        // Signers must explicitly approve the consent texts before any signing path.
+        await assertRecipientSigningConsent({ token });
 
         if (isTspEnvelope(envelope)) {
           return await prepareCscRecipientSigning({

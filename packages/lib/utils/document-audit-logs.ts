@@ -658,6 +658,19 @@ export const formatDocumentAuditLogAction = (i18n: I18n, auditLog: TDocumentAudi
       you: msg`Your remote signature was applied`,
       user: msg`${user}'s remote signature was applied`,
     }))
+    .with({ type: DOCUMENT_AUDIT_LOG_TYPE.DOCUMENT_RECIPIENT_CONSENT_ACCEPTED }, ({ data }) =>
+      data.stamp
+        ? {
+            anonymous: msg`Recipient approved the signing consent and declared authority to use the stamp of ${data.stamp.companyName}`,
+            you: msg`You approved the signing consent and declared authority to use the stamp of ${data.stamp.companyName}`,
+            user: msg`${user} approved the signing consent and declared authority to use the stamp of ${data.stamp.companyName}`,
+          }
+        : {
+            anonymous: msg`Recipient approved the signing consent`,
+            you: msg`You approved the signing consent`,
+            user: msg`${user} approved the signing consent`,
+          },
+    )
     .exhaustive();
 
   let selectedDescription = description.anonymous;

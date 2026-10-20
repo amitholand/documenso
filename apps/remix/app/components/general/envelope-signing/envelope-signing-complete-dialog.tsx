@@ -5,6 +5,7 @@ import { useIsFramed } from '@documenso/lib/client-only/hooks/use-is-framed';
 import { useCurrentEnvelopeRender } from '@documenso/lib/client-only/providers/envelope-render-provider';
 import { PDF_VIEWER_CONTENT_SELECTOR } from '@documenso/lib/constants/pdf-viewer';
 import { isBase64Image } from '@documenso/lib/constants/signatures';
+import { isStampSignatureField } from '@documenso/lib/constants/signing-consent';
 import { AppError, AppErrorCode } from '@documenso/lib/errors/app-error';
 import type { TRecipientAccessAuth } from '@documenso/lib/types/document-auth';
 import { isTspEnvelope } from '@documenso/lib/types/signature-level';
@@ -40,6 +41,7 @@ export const EnvelopeSignerCompleteDialog = () => {
     setShowPendingFieldTooltip,
     setFieldIdToActivate,
     recipientFieldsRemaining,
+    recipientFields,
     recipient,
     nextRecipient,
     email,
@@ -47,6 +49,11 @@ export const EnvelopeSignerCompleteDialog = () => {
   } = useRequiredEnvelopeSigningContext();
 
   const { currentEnvelopeItem, setCurrentEnvelopeItem } = useCurrentEnvelopeRender();
+
+  const hasStampSignature = useMemo(
+    () => recipientFields.some((field) => field.inserted && isStampSignatureField(field)),
+    [recipientFields],
+  );
 
   const { onDocumentCompleted, onDocumentError } = useEmbedSigningContext() || {};
 
@@ -386,6 +393,8 @@ export const EnvelopeSignerCompleteDialog = () => {
       onSignatureComplete={isDirectTemplate ? handleDirectTemplateCompleteClick : handleOnCompleteClick}
       documentTitle={envelope.title}
       fields={recipientFieldsRemaining}
+      hasStampSignature={hasStampSignature}
+      skipConsentRecording={isDirectTemplate}
       fieldsValidated={handleOnNextFieldClick}
       recipient={recipient}
       allowDictateNextSigner={Boolean(nextRecipient && envelope.documentMeta.allowDictateNextSigner)}

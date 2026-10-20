@@ -487,12 +487,17 @@ const deleteExistingTeam = async (teamUrl: string, organisationId: string) => {
   const organisationGroupIds = existingTeam.teamGroups.map((teamGroup) => teamGroup.organisationGroupId);
 
   // Audit logs are only SetNull on envelope delete, so purge them explicitly.
-  await prisma.documentAuditLog.deleteMany({
-    where: {
-      envelope: {
-        teamId: existingTeam.id,
+  // Audit logs are immutable by trigger, so the purge has to opt in for this transaction.
+  await prisma.$transaction(async (tx) => {
+    await tx.$executeRaw`SET LOCAL documenso.allow_audit_log_changes = 'on'`;
+
+    await tx.documentAuditLog.deleteMany({
+      where: {
+        envelope: {
+          teamId: existingTeam.id,
+        },
       },
-    },
+    });
   });
 
   await prisma.$transaction(async (tx) => {

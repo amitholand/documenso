@@ -13,6 +13,7 @@ import type { RequestMetadata } from '../../universal/extract-request-metadata';
 import { createDocumentAuditLogData } from '../../utils/document-audit-logs';
 import { isRecipientEmailValidForSending } from '../../utils/recipients';
 import { renderEmailWithI18N } from '../../utils/render-email-with-i18n';
+import { deleteOrphanedDocumentData } from '../document/delete-orphaned-document-data';
 import { getEmailContext } from '../email/get-email-context';
 
 export type AdminSuperDeleteDocumentOptions = {
@@ -103,8 +104,13 @@ export const adminSuperDeleteDocument = async ({ envelopeId, requestMetadata }: 
     );
   }
 
+  const envelopeItems = await prisma.envelopeItem.findMany({
+    where: { envelopeId },
+    select: { documentDataId: true },
+  });
+
   // always hard delete if deleted from admin
-  return await prisma.$transaction(async (tx) => {
+  const deletedEnvelope = await prisma.$transaction(async (tx) => {
     await tx.documentAuditLog.create({
       data: createDocumentAuditLogData({
         envelopeId,
@@ -119,4 +125,10 @@ export const adminSuperDeleteDocument = async ({ envelopeId, requestMetadata }: 
 
     return await tx.envelope.delete({ where: { id: envelopeId } });
   });
+
+  await deleteOrphanedDocumentData(envelopeItems.map((item) => item.documentDataId)).catch((err) => {
+    console.error('Failed to delete stored files for deleted envelope', envelopeId, err);
+  });
+
+  return deletedEnvelope;
 };

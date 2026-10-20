@@ -15,6 +15,7 @@ import { isRecipientEmailValidForSending } from '../../utils/recipients';
 import { getEmailContext } from '../email/get-email-context';
 import { getEnvelopeWhereInput } from '../envelope/get-envelope-by-id';
 import { triggerWebhook } from '../webhooks/trigger/trigger-webhook';
+import { deleteOrphanedDocumentData } from './delete-orphaned-document-data';
 
 export type DeleteDocumentOptions = {
   id: EnvelopeIdOptions;
@@ -167,6 +168,11 @@ const handleDocumentOwnerDelete = async ({ envelope, user, requestMetadata }: Ha
     });
   }
 
+  const envelopeItems = await prisma.envelopeItem.findMany({
+    where: { envelopeId: envelope.id },
+    select: { documentDataId: true },
+  });
+
   // Hard delete draft and pending documents.
   const deletedEnvelope = await prisma.$transaction(async (tx) => {
     // Currently redundant since deleting a document will delete the audit logs.
@@ -190,6 +196,11 @@ const handleDocumentOwnerDelete = async ({ envelope, user, requestMetadata }: Ha
         },
       },
     });
+  });
+
+  // Remove the stored PDFs too, so deleted drafts don't leave personal data behind.
+  await deleteOrphanedDocumentData(envelopeItems.map((item) => item.documentDataId)).catch((err) => {
+    console.error('Failed to delete stored files for deleted envelope', envelope.id, err);
   });
 
   const isEnvelopeDeleteEmailEnabled = extractDerivedDocumentEmailSettings(envelope.documentMeta).documentDeleted;

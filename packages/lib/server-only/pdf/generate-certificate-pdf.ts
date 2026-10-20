@@ -1,3 +1,4 @@
+import { prisma } from '@documenso/prisma';
 import { PDF } from '@libpdf/core';
 import { i18n } from '@lingui/core';
 import { msg } from '@lingui/core/macro';
@@ -7,6 +8,7 @@ import { prop, sortBy } from 'remeda';
 import { match } from 'ts-pattern';
 
 import { ZSupportedLanguageCodeSchema } from '../../constants/i18n';
+import { getSigningConsentLocale, SIGNING_CONSENT_TEXTS } from '../../constants/signing-consent';
 import type { TDocumentAuditLogBaseSchema } from '../../types/document-audit-logs';
 import { extractDocumentAuthMethods } from '../../utils/document-auth';
 import { getTranslations } from '../../utils/i18n';
@@ -43,12 +45,17 @@ export const generateCertificatePdf = async (options: GenerateCertificatePdfOpti
 
   const documentLanguage = ZSupportedLanguageCodeSchema.parse(language);
 
-  const [organisationClaim, auditLogs, messages] = await Promise.all([
+  const [organisationClaim, auditLogs, messages, latestAuditLog] = await Promise.all([
     getOrganisationClaimByTeamId({ teamId: envelope.teamId }),
     getDocumentCertificateAuditLogs({
       envelopeId: envelope.id,
     }),
     getTranslations(documentLanguage),
+    prisma.documentAuditLog.findFirst({
+      where: { envelopeId: envelope.id, chainIndex: { not: null } },
+      orderBy: { chainIndex: 'desc' },
+      select: { hash: true },
+    }),
   ]);
 
   i18n.loadAndActivate({
@@ -83,6 +90,28 @@ export const generateCertificatePdf = async (options: GenerateCertificatePdfOpti
       const documentRecipientRejected: TDocumentAuditLogBaseSchema | undefined = auditLogs[
         'DOCUMENT_RECIPIENT_REJECTED'
       ].find((log) => log.type === 'DOCUMENT_RECIPIENT_REJECTED' && log.data.recipientId === recipientId);
+
+      const consentLog = sortBy(
+        auditLogs.DOCUMENT_RECIPIENT_CONSENT_ACCEPTED.filter((log) => log.data.recipientId === recipientId),
+        [prop('createdAt'), 'desc'],
+      ).at(0);
+
+      const consent = consentLog
+        ? {
+            createdAt: consentLog.createdAt,
+            textsSha256: consentLog.data.textsSha256,
+            stamp: consentLog.data.stamp
+              ? {
+                  companyName: consentLog.data.stamp.companyName,
+                  companyNumber: consentLog.data.stamp.companyNumber,
+                  role: consentLog.data.stamp.role,
+                }
+              : undefined,
+            stampNotVerifiedText: consentLog.data.stamp
+              ? SIGNING_CONSENT_TEXTS[getSigningConsentLocale(consentLog.data.locale)].stampNotVerified
+              : undefined,
+          }
+        : null;
 
       const extractedAuthMethods = extractDocumentAuthMethods({
         documentAuth: envelope.authOptions,
@@ -126,6 +155,7 @@ export const generateCertificatePdf = async (options: GenerateCertificatePdfOpti
         signatureField,
         rejectionReason: recipient.rejectionReason,
         authLevel,
+        consent,
         logs: {
           emailed: emailSent ?? null,
           sent: documentSent ?? null,
@@ -137,6 +167,7 @@ export const generateCertificatePdf = async (options: GenerateCertificatePdfOpti
     }),
     envelopeOwner,
     envelopeId: envelope.id,
+    auditTrailHash: latestAuditLog?.hash ?? null,
     qrToken: envelope.qrToken,
     hidePoweredBy: organisationClaim.flags.hidePoweredBy ?? false,
     pageWidth,

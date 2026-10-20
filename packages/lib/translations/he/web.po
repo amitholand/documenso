@@ -584,6 +584,15 @@ msgid "{user} approved the document"
 msgstr "{user} אישר/ה את המסמך"
 
 #: packages/lib/utils/document-audit-logs.ts
+msgid "{user} approved the signing consent"
+msgstr "{user} אישר/ה את ההסכמה לחתימה"
+
+#. placeholder {0}: data.stamp.companyName
+#: packages/lib/utils/document-audit-logs.ts
+msgid "{user} approved the signing consent and declared authority to use the stamp of {0}"
+msgstr "{user} אישר/ה את ההסכמה לחתימה והצהיר/ה על הרשאה להשתמש בחותמת של {0}"
+
+#: packages/lib/utils/document-audit-logs.ts
 msgid "{user} authenticated with the signing provider"
 msgstr "{user} התאמת/ה מול ספק החתימה"
 
@@ -1837,8 +1846,8 @@ msgid "An administrator has created a Documenso account for you."
 msgstr "מנהל מערכת יצר עבורך חשבון Documenso."
 
 #: apps/remix/app/routes/_unauthenticated+/articles.signature-disclosure.tsx
-msgid "An electronic signature provided by you on our platform, achieved through clicking through to a document and entering your name, or any other electronic signing method we provide, is legally binding. It carries the same weight and enforceability as a manual signature written with ink on paper."
-msgstr "חתימה אלקטרונית שסיפקת בפלטפורמה שלנו, באמצעות לחיצה על מסמך והזנת שמך, או בכל שיטת חתימה אלקטרונית אחרת שאנו מספקים, מחייבת מבחינה משפטית. יש לה אותו משקל ואותה אכיפות כמו חתימה ידנית בדיו על נייר."
+msgid "An electronic signature provided by you on our platform, achieved through clicking through to a document and entering your name, or any other electronic signing method we provide, binds you as your signature. Some documents require a special form by law, such as real estate transactions, wills or notarised documents, and may not be signed this way."
+msgstr "חתימה אלקטרונית שלך בפלטפורמה, בין אם בלחיצה על המסמך והזנת שמך ובין אם בכל אמצעי חתימה אלקטרוני אחר שאנו מספקים, מחייבת אותך כחתימתך. מסמכים מסוימים מחייבים על פי דין צורה מיוחדת, כגון עסקאות במקרקעין, צוואות או מסמכים הדורשים אימות נוטריוני, ולא ניתן לחתום עליהם בדרך זו."
 
 #: apps/remix/app/routes/_unauthenticated+/articles.signature-disclosure.tsx
 msgid "An email account"
@@ -2431,6 +2440,10 @@ msgstr "פרטי יומן ביקורת"
 #: apps/remix/app/routes/_authenticated+/admin+/documents.$id.tsx
 msgid "Audit Logs"
 msgstr "יומני ביקורת"
+
+#: packages/lib/server-only/pdf/render-certificate.ts
+msgid "Audit trail SHA-256"
+msgstr "SHA-256 של יומן הביקורת"
 
 #: apps/remix/app/routes/_internal+/[__htmltopdf]+/certificate.tsx
 #: packages/lib/server-only/pdf/render-certificate.ts
@@ -3140,6 +3153,22 @@ msgstr "פרטי החברה"
 #: apps/remix/app/components/general/settings-upsell/branding-upsell.tsx
 msgid "Company details and website in email footers"
 msgstr "פרטי החברה ואתר האינטרנט בתחתית האימיילים"
+
+#: apps/remix/app/components/general/document-signing/document-signing-complete-dialog.tsx
+msgid "Company name"
+msgstr "שם החברה"
+
+#: apps/remix/app/components/general/document-signing/document-signing-complete-dialog.tsx
+msgid "Company number"
+msgstr "ח.פ."
+
+#: apps/remix/app/components/general/document-signing/document-signing-complete-dialog.tsx
+msgid "Company stamp authority"
+msgstr "הרשאה לשימוש בחותמת החברה"
+
+#: packages/lib/server-only/pdf/render-certificate.ts
+msgid "Company stamp authority declared"
+msgstr "הוצהרה הרשאה לשימוש בחותמת החברה"
 
 #: apps/remix/app/components/dialogs/organisation-create-dialog.tsx
 msgid "Compare all plans and features in detail"
@@ -5844,7 +5873,6 @@ msgstr "המעטפה הופצה"
 #: packages/lib/server-only/pdf/render-audit-logs.ts
 #: packages/lib/server-only/pdf/render-audit-logs.ts
 #: packages/lib/server-only/pdf/render-audit-logs.ts
-#: packages/lib/server-only/pdf/render-certificate.ts
 #: packages/lib/server-only/pdf/render-certificate.ts
 msgid "Envelope ID"
 msgstr "מזהה מעטפה"
@@ -9365,7 +9393,9 @@ msgid "Primary Foreground"
 msgstr "חזית ראשית"
 
 #: apps/remix/app/components/forms/signup.tsx
+#: apps/remix/app/components/general/document-signing/document-signing-complete-dialog.tsx
 #: apps/remix/app/components/general/public-legal-links.tsx
+#: apps/remix/app/routes/_unauthenticated+/articles.privacy.tsx
 msgid "Privacy Policy"
 msgstr "מדיניות פרטיות"
 
@@ -9604,6 +9634,15 @@ msgstr "אימות פעולת נמען"
 #: packages/lib/utils/document-audit-logs.ts
 msgid "Recipient approved the document"
 msgstr "הנמען אישר את המסמך"
+
+#: packages/lib/utils/document-audit-logs.ts
+msgid "Recipient approved the signing consent"
+msgstr "הנמען/ת אישר/ה את ההסכמה לחתימה"
+
+#. placeholder {0}: data.stamp.companyName
+#: packages/lib/utils/document-audit-logs.ts
+msgid "Recipient approved the signing consent and declared authority to use the stamp of {0}"
+msgstr "הנמען/ת אישר/ה את ההסכמה לחתימה והצהיר/ה על הרשאה להשתמש בחותמת של {0}"
 
 #: packages/lib/utils/document-audit-logs.ts
 msgid "Recipient authenticated with the signing provider"
@@ -10053,6 +10092,10 @@ msgstr "דרישת מפתח גישה"
 #: packages/lib/constants/document-auth.ts
 msgid "Require password"
 msgstr "דרישת סיסמה"
+
+#: apps/remix/app/components/general/document-signing/document-signing-complete-dialog.tsx
+msgid "Required"
+msgstr "שדה חובה"
 
 #: packages/ui/primitives/document-flow/field-items-advanced-settings/checkbox-field.tsx
 #: packages/ui/primitives/document-flow/field-items-advanced-settings/dropdown-field.tsx
@@ -11224,10 +11267,9 @@ msgstr "תעודת החתימה סופקה על ידי"
 msgid "Signing Complete: {documentName}"
 msgstr "החתימה הושלמה: {documentName}"
 
-#: packages/lib/jobs/definitions/emails/send-document-completed-emails.handler.ts
-#: packages/lib/jobs/definitions/emails/send-document-completed-emails.handler.ts
-#~ msgid "Signing Complete!"
-#~ msgstr "החתימה הושלמה!"
+#: packages/lib/server-only/pdf/render-certificate.ts
+msgid "Signing consent approved"
+msgstr "ההסכמה לחתימה אושרה"
 
 #: apps/remix/app/routes/_recipient+/sign.$token+/expired.tsx
 msgid "Signing Deadline Expired"
@@ -12097,6 +12139,11 @@ msgstr "התבניות נמחקו חלקית"
 msgid "Terms of Service"
 msgstr "תנאי השירות"
 
+#: apps/remix/app/components/general/document-signing/document-signing-complete-dialog.tsx
+#: apps/remix/app/routes/_unauthenticated+/articles.terms.tsx
+msgid "Terms of Use"
+msgstr "תנאי השימוש"
+
 #: apps/remix/app/routes/_authenticated+/t.$teamUrl+/settings.webhooks.$id._index.tsx
 msgid "Test"
 msgstr "בדיקה"
@@ -12741,6 +12788,10 @@ msgstr "פעולה זו אינה הפיכה. היה בטוח."
 #: apps/remix/app/components/dialogs/admin-user-disable-dialog.tsx
 msgid "This action is reversible, but please be careful as the account may be affected permanently (e.g. their settings and contents not being restored properly)."
 msgstr "פעולה זו הפיכה, אך היזהר מאחר שהחשבון עלול להיפגע לצמיתות (לדוגמה, ההגדרות והתכנים שלו לא ישוחזרו כראוי)."
+
+#: apps/remix/app/components/general/document-signing/document-signing-complete-dialog.tsx
+msgid "This approval is required"
+msgstr "יש לאשר כדי להמשיך"
 
 #: apps/remix/app/components/dialogs/ai-field-detection-dialog.tsx
 #: apps/remix/app/components/dialogs/ai-recipient-detection-dialog.tsx
@@ -14931,8 +14982,8 @@ msgid "When you sign a document, we can automatically fill in and sign the follo
 msgstr "כשחותמים על מסמך, נוכל למלא ולחתום אוטומטית על השדות הבאים לפי מידע שכבר נמסר. אפשר גם לחתום ידנית או להסיר אחר כך כל שדה שנחתם אוטומטית."
 
 #: apps/remix/app/routes/_unauthenticated+/articles.signature-disclosure.tsx
-msgid "When you use our platform to affix your electronic signature to documents, you are consenting to do so under the Electronic Signatures in Global and National Commerce Act (E-Sign Act) and other applicable laws. This action indicates your agreement to use electronic means to sign documents and receive notifications."
-msgstr "כאשר אתה משתמש בפלטפורמה שלנו כדי להוסיף את חתימתך האלקטרונית למסמכים, אתה מסכים לעשות זאת בהתאם לחוק החתימות האלקטרוניות בסחר הגלובלי והלאומי (E-Sign Act) ולחוקים חלים אחרים. פעולה זו מעידה על הסכמתך להשתמש באמצעים אלקטרוניים לחתימה על מסמכים ולקבלת התראות."
+msgid "When you use our platform to affix your electronic signature to documents, you are consenting to do so under the Israeli Electronic Signature Law, 5761-2001, and other applicable laws. This action indicates your agreement to use electronic means to sign documents and receive notifications."
+msgstr "כאשר את/ה משתמש/ת בפלטפורמה כדי להוסיף את חתימתך האלקטרונית למסמכים, את/ה מסכים/ה לעשות זאת בהתאם לחוק חתימה אלקטרונית, התשס״א-2001, ולכל דין אחר החל. פעולה זו מעידה על הסכמתך להשתמש באמצעים אלקטרוניים לחתימה על מסמכים ולקבלת הודעות."
 
 #: apps/remix/app/routes/_authenticated+/o.$orgUrl.settings.sso.tsx
 msgid "Whether to enable the SSO portal for your organisation"
@@ -15002,6 +15053,15 @@ msgstr "הוספת נמען"
 #: packages/lib/utils/document-audit-logs.ts
 msgid "You approved the document"
 msgstr "אישרת את המסמך"
+
+#: packages/lib/utils/document-audit-logs.ts
+msgid "You approved the signing consent"
+msgstr "אישרת את ההסכמה לחתימה"
+
+#. placeholder {0}: data.stamp.companyName
+#: packages/lib/utils/document-audit-logs.ts
+msgid "You approved the signing consent and declared authority to use the stamp of {0}"
+msgstr "אישרת את ההסכמה לחתימה והצהרת על הרשאה להשתמש בחותמת של {0}"
 
 #: apps/remix/app/components/dialogs/envelope-cancel-dialog.tsx
 msgid "You are about to cancel <0>\"{title}\"</0>"
@@ -16177,6 +16237,10 @@ msgstr "העדפות התזכורת שלך עודכנו"
 #: packages/lib/utils/document-audit-logs.ts
 msgid "Your remote signature was applied"
 msgstr "החתימה המרוחקת שלך הוחלה"
+
+#: apps/remix/app/components/general/document-signing/document-signing-complete-dialog.tsx
+msgid "Your role"
+msgstr "תפקידך"
 
 #: apps/remix/app/components/general/document-signing/csc-recipient-signing-in-progress-page.tsx
 #: apps/remix/app/components/general/envelope-signing/envelope-signing-csc-status.tsx

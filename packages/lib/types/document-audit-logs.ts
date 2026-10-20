@@ -44,6 +44,7 @@ export const ZDocumentAuditLogTypeSchema = z.enum([
   'DOCUMENT_VIEWED', // When the document is viewed by a recipient.
   'DOCUMENT_RECIPIENT_REJECTED', // When a recipient rejects the document.
   'DOCUMENT_RECIPIENT_COMPLETED', // When a recipient completes all their required tasks for the document.
+  'DOCUMENT_RECIPIENT_CONSENT_ACCEPTED', // When a recipient explicitly approves the signing consent texts.
   'DOCUMENT_RECIPIENT_EXPIRED', // When a recipient's signing window expires.
   'DOCUMENT_SENT', // When the document transitions from DRAFT to PENDING.
   'DOCUMENT_TITLE_UPDATED', // When the document title is updated.
@@ -258,6 +259,17 @@ export const ZDocumentAuditLogEventDocumentCompletedSchema = z.object({
   type: z.literal(DOCUMENT_AUDIT_LOG_TYPE.DOCUMENT_COMPLETED),
   data: z.object({
     transactionId: z.string(),
+    /** SHA-256 (hex) of each sealed PDF, recorded once the final file is stored. */
+    sealedDocumentsSha256: z
+      .array(
+        z.object({
+          envelopeItemId: z.string(),
+          title: z.string(),
+          originalSha256: z.string(),
+          sealedSha256: z.string(),
+        }),
+      )
+      .optional(),
   }),
 });
 
@@ -560,6 +572,28 @@ export const ZDocumentAuditLogEventDocumentRecipientCompleteSchema = z.object({
 });
 
 /**
+ * Event: Document recipient explicitly approved the signing consent texts.
+ */
+export const ZDocumentAuditLogEventDocumentRecipientConsentAcceptedSchema = z.object({
+  type: z.literal(DOCUMENT_AUDIT_LOG_TYPE.DOCUMENT_RECIPIENT_CONSENT_ACCEPTED),
+  data: ZBaseRecipientDataSchema.extend({
+    consentVersion: z.string(),
+    locale: z.string(),
+    /** The exact texts the recipient approved. */
+    texts: z.array(z.string()),
+    textsSha256: z.string(),
+    stamp: z
+      .object({
+        companyName: z.string(),
+        companyNumber: z.string(),
+        role: z.string(),
+        stampImagesSha256: z.array(z.string()),
+      })
+      .optional(),
+  }),
+});
+
+/**
  * Event: Document recipient rejected the document.
  */
 export const ZDocumentAuditLogEventDocumentRecipientRejectedSchema = z.object({
@@ -855,6 +889,7 @@ export const ZDocumentAuditLogSchema = ZDocumentAuditLogBaseSchema.and(
     ZDocumentAuditLogEventDocumentOpenedSchema,
     ZDocumentAuditLogEventDocumentViewedSchema,
     ZDocumentAuditLogEventDocumentRecipientCompleteSchema,
+    ZDocumentAuditLogEventDocumentRecipientConsentAcceptedSchema,
     ZDocumentAuditLogEventDocumentRecipientRejectedSchema,
     ZDocumentAuditLogEventDocumentRecipientRequested2FAEmailSchema,
     ZDocumentAuditLogEventDocumentRecipientValidated2FAEmailSchema,
