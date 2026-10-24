@@ -11,7 +11,8 @@
   ],
   "functions": {
     "api/index.js": {
-      "maxDuration": 300
+      "maxDuration": 300,
+      "includeFiles": "build/server/hono/packages/lib/translations/**"
     }
   }
 }
