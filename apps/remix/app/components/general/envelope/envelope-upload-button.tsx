@@ -4,6 +4,7 @@ import { useCurrentOrganisation } from '@documenso/lib/client-only/providers/org
 import { useSession } from '@documenso/lib/client-only/providers/session';
 import { TIME_ZONES } from '@documenso/lib/constants/time-zones';
 import { AppError } from '@documenso/lib/errors/app-error';
+import { putFileToStorage } from '@documenso/lib/universal/upload/put-file';
 import { formatDocumentsPath, formatTemplatesPath } from '@documenso/lib/utils/teams';
 import { trpc } from '@documenso/trpc/react';
 import type { TCreateEnvelopePayload } from '@documenso/trpc/server/envelope-router/create-envelope.types';
@@ -79,13 +80,12 @@ export const EnvelopeUploadButton = ({ className, type, folderId }: EnvelopeUplo
         },
       } satisfies TCreateEnvelopePayload;
 
+      const uploadedFileKeys = await Promise.all(files.map(async (file) => putFileToStorage(file)));
+
       const formData = new FormData();
 
       formData.append('payload', JSON.stringify(payload));
-
-      for (const file of files) {
-        formData.append('files', file);
-      }
+      formData.append('fileKeys', JSON.stringify(uploadedFileKeys));
 
       const { id } = await createEnvelope(formData).catch((error) => {
         console.error(error);

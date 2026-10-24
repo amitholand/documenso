@@ -7,6 +7,7 @@ import { getAllowedUploadMimeTypes } from '@documenso/lib/constants/document-con
 import { DEFAULT_DOCUMENT_TIME_ZONE, TIME_ZONES } from '@documenso/lib/constants/time-zones';
 import { AppError } from '@documenso/lib/errors/app-error';
 import { megabytesToBytes } from '@documenso/lib/universal/unit-convertions';
+import { putFileToStorage } from '@documenso/lib/universal/upload/put-file';
 import { formatDocumentsPath, formatTemplatesPath } from '@documenso/lib/utils/teams';
 import { trpc } from '@documenso/trpc/react';
 import type { TCreateEnvelopePayload } from '@documenso/trpc/server/envelope-router/create-envelope.types';
@@ -72,13 +73,12 @@ export const EnvelopeDropZoneWrapper = ({ children, type, className }: EnvelopeD
         },
       } satisfies TCreateEnvelopePayload;
 
+      const uploadedFileKeys = await Promise.all(files.map(async (file) => putFileToStorage(file)));
+
       const formData = new FormData();
 
       formData.append('payload', JSON.stringify(payload));
-
-      for (const file of files) {
-        formData.append('files', file);
-      }
+      formData.append('fileKeys', JSON.stringify(uploadedFileKeys));
 
       const { id } = await createEnvelope(formData);
 

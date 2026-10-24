@@ -1,3 +1,4 @@
+import { DOCUMENT_CONVERSION_MIME_TYPE_DOCX } from '@documenso/lib/constants/document-conversion';
 import DocumentDataSchema from '@documenso/prisma/generated/zod/modelSchema/DocumentDataSchema';
 import { z } from 'zod';
 
@@ -12,6 +13,30 @@ export const ZUploadPdfResponseSchema = DocumentDataSchema.pick({
 
 export type TUploadPdfRequest = z.infer<typeof ZUploadPdfRequestSchema>;
 export type TUploadPdfResponse = z.infer<typeof ZUploadPdfResponseSchema>;
+
+export const ZUploadContentTypeSchema = z.enum(['application/pdf', DOCUMENT_CONVERSION_MIME_TYPE_DOCX]);
+
+export type TUploadContentType = z.infer<typeof ZUploadContentTypeSchema>;
+
+export const ZPresignPdfUploadRequestSchema = z.object({
+  fileName: z.string().min(1),
+  contentType: ZUploadContentTypeSchema.default('application/pdf'),
+});
+
+export const ZPresignPdfUploadResponseSchema = z.object({
+  key: z.string(),
+  url: z.string(),
+});
+
+export type TPresignPdfUploadRequest = z.infer<typeof ZPresignPdfUploadRequestSchema>;
+export type TPresignPdfUploadResponse = z.infer<typeof ZPresignPdfUploadResponseSchema>;
+
+export const ZUploadPdfFromKeyRequestSchema = z.object({
+  key: z.string().min(1),
+  fileName: z.string().min(1),
+});
+
+export type TUploadPdfFromKeyRequest = z.infer<typeof ZUploadPdfFromKeyRequestSchema>;
 
 export const ZGetEnvelopeItemFileRequestParamsSchema = z.object({
   envelopeId: z.string().min(1),

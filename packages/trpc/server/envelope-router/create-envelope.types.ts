@@ -11,6 +11,7 @@ import {
 } from '@documenso/lib/types/field';
 import { ZEnvelopeFieldAndMetaSchema } from '@documenso/lib/types/field-meta';
 import { zEmail } from '@documenso/lib/utils/zod';
+import { ZUploadContentTypeSchema } from '@documenso/remix/server/api/files/files.types';
 import { EnvelopeType } from '@prisma/client';
 import { z } from 'zod';
 import { zfd } from 'zod-form-data';
@@ -81,7 +82,18 @@ export const ZCreateEnvelopePayloadSchema = z.object({
 
 export const ZCreateEnvelopeRequestSchema = zodFormData({
   payload: zfd.json(ZCreateEnvelopePayloadSchema),
-  files: zfd.repeatableOfType(zfdFile()),
+  files: zfd.repeatableOfType(zfdFile()).optional(),
+  fileKeys: zfd
+    .json(
+      z.array(
+        z.object({
+          key: z.string().min(1),
+          fileName: z.string().min(1),
+          type: ZUploadContentTypeSchema,
+        }),
+      ),
+    )
+    .optional(),
 });
 
 export const ZCreateEnvelopeResponseSchema = z.object({

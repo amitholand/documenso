@@ -3,6 +3,7 @@
   "framework": null,
   "buildCommand": "npx prisma generate --schema ../../packages/prisma/schema.prisma && npm run build",
   "outputDirectory": "build/client",
+  "regions": ["icn1"],
   "rewrites": [
     {
       "source": "/(.*)",

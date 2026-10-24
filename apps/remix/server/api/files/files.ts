@@ -2,6 +2,7 @@ import { getOptionalNonEmbedSession } from '@documenso/auth/server/lib/session/e
 import { APP_DOCUMENT_UPLOAD_SIZE_LIMIT } from '@documenso/lib/constants/app';
 import { AppError } from '@documenso/lib/errors/app-error';
 import { verifyEmbeddingPresignToken } from '@documenso/lib/server-only/embedding-presign/verify-embedding-presign-token';
+import { getStorageProvider } from '@documenso/lib/universal/upload/providers';
 import { putNormalizedPdfFileServerSide } from '@documenso/lib/universal/upload/put-file.server';
 import { prisma } from '@documenso/prisma';
 import { sValidator } from '@hono/standard-validator';
@@ -11,11 +12,14 @@ import { Hono } from 'hono';
 import type { HonoEnv } from '../../router';
 import { checkEnvelopeFileAccess, handleEnvelopeItemFileRequest, resolveFileUploadUserId } from './files.helpers';
 import {
+  type TPresignPdfUploadResponse,
   ZGetEnvelopeItemFileDownloadRequestParamsSchema,
   ZGetEnvelopeItemFileRequestParamsSchema,
   ZGetEnvelopeItemFileRequestQuerySchema,
   ZGetEnvelopeItemFileTokenDownloadRequestParamsSchema,
   ZGetEnvelopeItemFileTokenRequestParamsSchema,
+  ZPresignPdfUploadRequestSchema,
+  ZUploadPdfFromKeyRequestSchema,
   ZUploadPdfRequestSchema,
 } from './files.types';
 import getEnvelopeItemPdfRoute from './routes/get-envelope-item-pdf';
@@ -54,6 +58,81 @@ export const filesRoute = new Hono<HonoEnv>()
       return c.json(result);
     } catch (error) {
       console.error('Upload failed:', error);
+      return c.json({ error: 'Upload failed' }, 500);
+    }
+  })
+  /**
+   * Issues a presigned URL so the browser can upload a PDF straight to object storage,
+   * bypassing the function request body limit.
+   */
+  .post('/presign-pdf-upload', sValidator('json', ZPresignPdfUploadRequestSchema), async (c) => {
+    try {
+      const userId = await resolveFileUploadUserId(c);
+
+      if (!userId) {
+        return c.json({ error: 'Unauthorized' }, 401);
+      }
+
+      const { fileName, contentType } = c.req.valid('json');
+
+      const { key, url } = await getStorageProvider().getPresignPostUrl(fileName, contentType, userId);
+
+      return c.json({ key, url } satisfies TPresignPdfUploadResponse);
+    } catch (error) {
+      console.error('Presign upload failed:', error);
+      return c.json({ error: 'Upload failed' }, 500);
+    }
+  })
+  /**
+   * Finalizes a PDF uploaded with a presigned URL. Reads the object back from storage,
+   * normalizes it and creates the document data record.
+   */
+  .post('/upload-pdf-from-key', sValidator('json', ZUploadPdfFromKeyRequestSchema), async (c) => {
+    try {
+      const userId = await resolveFileUploadUserId(c);
+
+      if (!userId) {
+        return c.json({ error: 'Unauthorized' }, 401);
+      }
+
+      const { key, fileName } = c.req.valid('json');
+
+      // Only allow finalizing keys issued to this user.
+      if (!key.startsWith(`${userId}/`)) {
+        return c.json({ error: 'Invalid upload key' }, 403);
+      }
+
+      const storage = getStorageProvider();
+
+      const { url } = await storage.getPresignGetUrl(key);
+
+      const response = await fetch(url);
+
+      if (!response.ok) {
+        return c.json({ error: 'Uploaded file not found' }, 400);
+      }
+
+      const arrayBuffer = await response.arrayBuffer();
+
+      const MAX_FILE_SIZE = APP_DOCUMENT_UPLOAD_SIZE_LIMIT * 1024 * 1024;
+
+      if (arrayBuffer.byteLength > MAX_FILE_SIZE) {
+        await storage.deleteFile(key).catch((error) => console.error('Failed to delete oversized upload:', error));
+
+        return c.json({ error: 'File too large' }, 400);
+      }
+
+      const result = await putNormalizedPdfFileServerSide({
+        name: fileName,
+        type: 'application/pdf',
+        arrayBuffer: async () => arrayBuffer,
+      });
+
+      await storage.deleteFile(key).catch((error) => console.error('Failed to delete temporary upload:', error));
+
+      return c.json(result);
+    } catch (error) {
+      console.error('Upload from key failed:', error);
       return c.json({ error: 'Upload failed' }, 500);
     }
   })
