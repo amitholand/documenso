@@ -3,7 +3,7 @@
   "framework": null,
   "buildCommand": "npx prisma generate --schema ../../packages/prisma/schema.prisma && npm run build",
   "outputDirectory": "build/client",
-  "regions": ["icn1"],
+  "regions": ["fra1"],
   "rewrites": [
     {
       "source": "/(.*)",
@@ -13,7 +13,7 @@
   "functions": {
     "api/index.js": {
       "maxDuration": 300,
-      "includeFiles": "build/server/hono/packages/lib/translations/**"
+      "includeFiles": "{build/server/hono/packages/lib/translations/**,public/fonts/**}"
     }
   }
 }
