@@ -2,7 +2,6 @@ import { prisma } from '@documenso/prisma';
 import type { Duration } from 'luxon';
 import { DateTime } from 'luxon';
 
-import { TEAM_MEMBER_ROLE_PERMISSIONS_MAP } from '../../constants/teams';
 // temporary choice for testing only
 import * as timeConstants from '../../constants/time';
 import { AppError, AppErrorCode } from '../../errors/app-error';
@@ -28,11 +27,11 @@ export const createApiToken = async ({ userId, teamId, tokenName, expiresIn }: C
 
   const timeConstantsRecords: TimeConstants = timeConstants;
 
+  // Any team member can create a token for themselves: it acts with their own role in the team.
   const team = await prisma.team.findFirst({
     where: buildTeamWhereQuery({
       teamId,
       userId,
-      roles: TEAM_MEMBER_ROLE_PERMISSIONS_MAP['MANAGE_TEAM'],
     }),
   });
 

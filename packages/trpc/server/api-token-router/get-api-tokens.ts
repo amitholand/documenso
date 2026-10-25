@@ -6,8 +6,8 @@ import { ZGetApiTokensRequestSchema, ZGetApiTokensResponseSchema } from './get-a
 export const getApiTokensRoute = authenticatedProcedure
   .input(ZGetApiTokensRequestSchema)
   .output(ZGetApiTokensResponseSchema)
-  .query(async ({ ctx }) => {
-    const { teamId } = ctx;
+  .query(async ({ input, ctx }) => {
+    const teamId = input?.teamId ?? ctx.teamId;
 
     ctx.logger.info({
       input: {

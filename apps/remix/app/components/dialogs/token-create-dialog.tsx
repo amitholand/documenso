@@ -34,7 +34,7 @@ import { useForm } from 'react-hook-form';
 import { match } from 'ts-pattern';
 import type { z } from 'zod';
 
-import { useCurrentTeam } from '~/providers/team';
+import { useOptionalCurrentTeam } from '~/providers/team';
 
 const NEVER_EXPIRE = 'NEVER' as const;
 
@@ -56,13 +56,19 @@ type TCreateTokenFormSchema = z.infer<typeof ZCreateTokenFormSchema>;
 
 export type TokenCreateDialogProps = {
   trigger?: React.ReactNode;
+
+  /**
+   * The team to create the token for. Defaults to the current team.
+   */
+  teamId?: number;
 } & Omit<DialogPrimitive.DialogProps, 'children'>;
 
-export const TokenCreateDialog = ({ trigger, ...props }: TokenCreateDialogProps) => {
+export const TokenCreateDialog = ({ trigger, teamId, ...props }: TokenCreateDialogProps) => {
   const { _ } = useLingui();
   const { toast } = useToast();
 
-  const team = useCurrentTeam();
+  const team = useOptionalCurrentTeam();
+  const tokenTeamId = teamId ?? team?.id;
 
   const [open, setOpen] = useState(false);
   const [createdToken, setCreatedToken] = useState<string | null>(null);
@@ -78,9 +84,13 @@ export const TokenCreateDialog = ({ trigger, ...props }: TokenCreateDialogProps)
   const { mutateAsync: createToken } = trpc.apiToken.create.useMutation();
 
   const onSubmit = async ({ tokenName, expirationDate }: TCreateTokenFormSchema) => {
+    if (tokenTeamId === undefined) {
+      return;
+    }
+
     try {
       const { token } = await createToken({
-        teamId: team.id,
+        teamId: tokenTeamId,
         tokenName,
         expirationDate: expirationDate === NEVER_EXPIRE ? null : expirationDate,
       });
@@ -113,7 +123,7 @@ export const TokenCreateDialog = ({ trigger, ...props }: TokenCreateDialogProps)
     <Dialog open={open} onOpenChange={(value) => !form.formState.isSubmitting && setOpen(value)} {...props}>
       <DialogTrigger onClick={(e) => e.stopPropagation()} asChild>
         {trigger ?? (
-          <Button className="flex-shrink-0">
+          <Button className="flex-shrink-0" data-testid="token-create-button">
             <Trans>Create token</Trans>
           </Button>
         )}
@@ -144,6 +154,7 @@ export const TokenCreateDialog = ({ trigger, ...props }: TokenCreateDialogProps)
             <div className="relative">
               <Input
                 className="pe-12 font-mono text-sm"
+                data-testid="created-api-token"
                 aria-label={_(msg`Your new API token`)}
                 name="createdToken"
                 readOnly
@@ -158,7 +169,7 @@ export const TokenCreateDialog = ({ trigger, ...props }: TokenCreateDialogProps)
             </div>
 
             <DialogFooter>
-              <Button type="button" onClick={() => setOpen(false)}>
+              <Button type="button" data-testid="token-created-done" onClick={() => setOpen(false)}>
                 <Trans>Done</Trans>
               </Button>
             </DialogFooter>
@@ -188,7 +199,7 @@ export const TokenCreateDialog = ({ trigger, ...props }: TokenCreateDialogProps)
                         </FormLabel>
 
                         <FormControl>
-                          <Input className="bg-background" {...field} />
+                          <Input className="bg-background" data-testid="token-name-input" {...field} />
                         </FormControl>
 
                         <FormDescription>
@@ -235,7 +246,7 @@ export const TokenCreateDialog = ({ trigger, ...props }: TokenCreateDialogProps)
                       <Trans>Cancel</Trans>
                     </Button>
 
-                    <Button type="submit" loading={form.formState.isSubmitting}>
+                    <Button type="submit" data-testid="token-create-submit" loading={form.formState.isSubmitting}>
                       <Trans>Create token</Trans>
                     </Button>
                   </DialogFooter>

@@ -10,13 +10,12 @@ export type DeleteTokenByIdOptions = {
   teamId: number;
 };
 
+/**
+ * Team managers can delete any token of the team, other members only their own.
+ */
 export const deleteTokenById = async ({ id, userId, teamId }: DeleteTokenByIdOptions) => {
   const team = await prisma.team.findFirst({
-    where: buildTeamWhereQuery({
-      teamId,
-      userId,
-      roles: TEAM_MEMBER_ROLE_PERMISSIONS_MAP['MANAGE_TEAM'],
-    }),
+    where: buildTeamWhereQuery({ teamId, userId }),
   });
 
   if (!team) {
@@ -25,10 +24,28 @@ export const deleteTokenById = async ({ id, userId, teamId }: DeleteTokenByIdOpt
     });
   }
 
-  await prisma.apiToken.delete({
+  const managedTeam = await prisma.team.findFirst({
+    where: buildTeamWhereQuery({
+      teamId,
+      userId,
+      roles: TEAM_MEMBER_ROLE_PERMISSIONS_MAP['MANAGE_TEAM'],
+    }),
+    select: {
+      id: true,
+    },
+  });
+
+  const { count } = await prisma.apiToken.deleteMany({
     where: {
       id,
       teamId,
+      ...(managedTeam ? {} : { userId }),
     },
   });
+
+  if (count === 0) {
+    throw new AppError(AppErrorCode.UNAUTHORIZED, {
+      message: 'You do not have permission to delete this token',
+    });
+  }
 };

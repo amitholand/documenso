@@ -21,19 +21,25 @@ import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
-import { useCurrentTeam } from '~/providers/team';
+import { useOptionalCurrentTeam } from '~/providers/team';
 
 export type TokenDeleteDialogProps = {
   token: Pick<ApiToken, 'id' | 'name'>;
+
+  /**
+   * The team the token belongs to. Defaults to the current team.
+   */
+  teamId?: number;
   onDelete?: () => void;
   children?: React.ReactNode;
 };
 
-export default function TokenDeleteDialog({ token, onDelete, children }: TokenDeleteDialogProps) {
+export default function TokenDeleteDialog({ token, teamId, onDelete, children }: TokenDeleteDialogProps) {
   const { _ } = useLingui();
   const { toast } = useToast();
 
-  const team = useCurrentTeam();
+  const team = useOptionalCurrentTeam();
+  const tokenTeamId = teamId ?? team?.id;
 
   const [isOpen, setIsOpen] = useState(false);
 
@@ -61,10 +67,14 @@ export default function TokenDeleteDialog({ token, onDelete, children }: TokenDe
   });
 
   const onSubmit = async () => {
+    if (tokenTeamId === undefined) {
+      return;
+    }
+
     try {
       await deleteTokenMutation({
         id: token.id,
-        teamId: team?.id,
+        teamId: tokenTeamId,
       });
 
       toast({

@@ -282,6 +282,12 @@ export const getSettingsNavGroups = ({
         label: msg`Security`,
         icon: LockIcon,
       },
+      {
+        key: 'tokens',
+        path: '/settings/tokens',
+        label: msg`API Tokens`,
+        icon: BracesIcon,
+      },
       ...(IS_BILLING_ENABLED() && hasManageableBillingOrgs
         ? [
             {
