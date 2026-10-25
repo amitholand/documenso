@@ -7,3 +7,5 @@
 
 # Vite
 vite.config.*.timestamp*
+.vercel
+.env*
