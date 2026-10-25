@@ -1,7 +1,5 @@
 // sort-imports-ignore
 import '../konva/skia-backend';
-
-import fs from 'node:fs';
 import type { Canvas } from '@documenso/skia-canvas';
 import { Image as SkiaImage } from '@documenso/skia-canvas';
 import type { I18n } from '@lingui/core';
@@ -19,7 +17,7 @@ import { RECIPIENT_ROLES_DESCRIPTION } from '../../constants/recipient-roles';
 import type { TDocumentAuditLog } from '../../types/document-audit-logs';
 import { DOCUMENT_AUDIT_LOG_TYPE } from '../../types/document-audit-logs';
 import { formatDocumentAuditLogAction } from '../../utils/document-audit-logs';
-import { ensureFontLibrary, resolvePublicAssetPath } from './helpers';
+import { ensureFontLibrary, readPublicAsset } from './helpers';
 
 export type AuditLogRecipient = {
   id: number;
@@ -436,13 +434,12 @@ const renderRow = (options: RenderRowOptions) => {
   return rowGroup;
 };
 
-const renderBranding = () => {
+const renderBranding = async () => {
   const branding = new Konva.Group();
 
   const brandingHeight = 16;
 
-  const logoPath = resolvePublicAssetPath('static/logo.png');
-  const logo = fs.readFileSync(logoPath);
+  const logo = await readPublicAsset('static/logo.png');
 
   // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
   const img = new SkiaImage(logo) as unknown as HTMLImageElement;
@@ -570,7 +567,7 @@ export async function renderAuditLogs({
   i18n,
   hidePoweredBy,
 }: GenerateAuditLogsOptions) {
-  ensureFontLibrary();
+  await ensureFontLibrary();
 
   const minimumMargin = 10;
 
@@ -604,7 +601,7 @@ export async function renderAuditLogs({
     overviewCard,
   });
 
-  const brandingGroup = renderBranding();
+  const brandingGroup = await renderBranding();
   const brandingRect = brandingGroup.getClientRect();
   const brandingTopPadding = 24;
 

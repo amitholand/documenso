@@ -15,7 +15,7 @@ type InsertFieldInPDFV2Options = {
 };
 
 export const insertFieldInPDFV2 = async ({ pageWidth, pageHeight, fields }: InsertFieldInPDFV2Options) => {
-  ensureFontLibrary();
+  await ensureFontLibrary();
 
   let stage: Konva.Stage | null = new Konva.Stage({ width: pageWidth, height: pageHeight });
   let layer: Konva.Layer | null = new Konva.Layer();

@@ -1,4 +1,5 @@
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import { AppError, AppErrorCode } from '@documenso/lib/errors/app-error';
 import { FontLibrary } from '@documenso/skia-canvas';
@@ -6,20 +7,84 @@ import type { Recipient } from '@prisma/client';
 import { FieldType } from '@prisma/client';
 import { match } from 'ts-pattern';
 
-/**
- * Resolves a file under the public folder.
- *
- * On Vercel the public folder is not part of the function bundle, so the build copies it into
- * build/server/hono/public, which is included in the function. Local development reads from public/.
- */
-export const resolvePublicAssetPath = (relativePath: string) => {
-  const bundledPath = path.join(process.cwd(), 'build/server/hono/public', relativePath);
+import { NEXT_PUBLIC_WEBAPP_URL } from '../../constants/app';
 
-  if (fs.existsSync(bundledPath)) {
-    return bundledPath;
+/**
+ * Reads a file from the public folder.
+ *
+ * Uses the copy in the function bundle or in public/ when it exists. Otherwise it fetches the file
+ * from the public URL, since Vercel does not always include public/ in the function.
+ */
+export const readPublicAsset = async (relativePath: string) => {
+  const localPaths = [
+    path.join(process.cwd(), 'build/server/hono/public', relativePath),
+    path.join(process.cwd(), 'public', relativePath),
+  ];
+  const localPath = localPaths.find((candidate) => fs.existsSync(candidate));
+
+  if (localPath) {
+    return fs.promises.readFile(localPath);
   }
 
-  return path.join(process.cwd(), 'public', relativePath);
+  const response = await fetch(new URL(relativePath, `${NEXT_PUBLIC_WEBAPP_URL()}/`));
+
+  if (!response.ok) {
+    throw new AppError(AppErrorCode.UNKNOWN_ERROR, { message: `Failed to load public asset ${relativePath}` });
+  }
+
+  return Buffer.from(await response.arrayBuffer());
+};
+
+/**
+ * Returns a file path for a font, writing it to the temp folder first when it is only available remotely.
+ */
+const resolveFontFilePath = async (fileName: string) => {
+  const relativePath = path.join('fonts', fileName);
+  const localPath = [
+    path.join(process.cwd(), 'build/server/hono/public', relativePath),
+    path.join(process.cwd(), 'public', relativePath),
+  ].find((candidate) => fs.existsSync(candidate));
+
+  if (localPath) {
+    return localPath;
+  }
+
+  const tempPath = path.join(os.tmpdir(), 'documenso-fonts', fileName);
+
+  if (!fs.existsSync(tempPath)) {
+    fs.mkdirSync(path.dirname(tempPath), { recursive: true });
+    fs.writeFileSync(tempPath, await readPublicAsset(relativePath));
+  }
+
+  return tempPath;
+};
+
+let fontLibraryPromise: Promise<void> | null = null;
+
+const registerFonts = async () => {
+  if (!FontLibrary.has('Caveat')) {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    FontLibrary.use({
+      ['Caveat']: [await resolveFontFilePath('caveat.ttf')],
+    });
+  }
+
+  if (!FontLibrary.has('Inter')) {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    FontLibrary.use({
+      ['Inter']: [await resolveFontFilePath('inter-variablefont_opsz,wght.ttf')],
+    });
+  }
+
+  if (!FontLibrary.has('Noto Sans')) {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    FontLibrary.use({
+      ['Noto Sans']: [await resolveFontFilePath('noto-sans.ttf')],
+      ['Noto Sans Japanese']: [await resolveFontFilePath('noto-sans-japanese.ttf')],
+      ['Noto Sans Chinese']: [await resolveFontFilePath('noto-sans-chinese.ttf')],
+      ['Noto Sans Korean']: [await resolveFontFilePath('noto-sans-korean.ttf')],
+    });
+  }
 };
 
 /**
@@ -29,31 +94,13 @@ export const resolvePublicAssetPath = (relativePath: string) => {
  * times is a no-op after the first invocation.
  */
 export const ensureFontLibrary = () => {
-  const fontPath = resolvePublicAssetPath('fonts');
+  fontLibraryPromise ??= registerFonts().catch((error) => {
+    fontLibraryPromise = null;
 
-  if (!FontLibrary.has('Caveat')) {
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    FontLibrary.use({
-      ['Caveat']: [path.join(fontPath, 'caveat.ttf')],
-    });
-  }
+    throw error;
+  });
 
-  if (!FontLibrary.has('Inter')) {
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    FontLibrary.use({
-      ['Inter']: [path.join(fontPath, 'inter-variablefont_opsz,wght.ttf')],
-    });
-  }
-
-  if (!FontLibrary.has('Noto Sans')) {
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    FontLibrary.use({
-      ['Noto Sans']: [path.join(fontPath, 'noto-sans.ttf')],
-      ['Noto Sans Japanese']: [path.join(fontPath, 'noto-sans-japanese.ttf')],
-      ['Noto Sans Chinese']: [path.join(fontPath, 'noto-sans-chinese.ttf')],
-      ['Noto Sans Korean']: [path.join(fontPath, 'noto-sans-korean.ttf')],
-    });
-  }
+  return fontLibraryPromise;
 };
 
 type RecipientPlaceholderInfo = {

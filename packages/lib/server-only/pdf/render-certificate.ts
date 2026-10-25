@@ -1,7 +1,5 @@
 // sort-imports-ignore
 import '../konva/skia-backend';
-
-import fs from 'node:fs';
 import type { Canvas } from '@documenso/skia-canvas';
 import { Image as SkiaImage } from '@documenso/skia-canvas';
 import type { I18n } from '@lingui/core';
@@ -19,7 +17,7 @@ import { getSignatureFontFamily } from '../../constants/pdf';
 import { RECIPIENT_ROLE_SIGNING_REASONS, RECIPIENT_ROLES_DESCRIPTION } from '../../constants/recipient-roles';
 import type { TDocumentAuditLogBaseSchema } from '../../types/document-audit-logs';
 import { svgToPng } from '../../utils/images/svg-to-png';
-import { ensureFontLibrary, resolvePublicAssetPath } from './helpers';
+import { ensureFontLibrary, readPublicAsset } from './helpers';
 
 type ColumnWidths = [number, number, number];
 
@@ -606,8 +604,7 @@ const renderBranding = async ({ qrToken, i18n }: { qrToken: string | null; i18n:
     height: brandingHeight,
   });
 
-  const logoPath = resolvePublicAssetPath('static/logo.png');
-  const logo = fs.readFileSync(logoPath);
+  const logo = await readPublicAsset('static/logo.png');
 
   // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
   const img = new SkiaImage(logo) as unknown as HTMLImageElement;
@@ -752,7 +749,7 @@ export async function renderCertificate({
   pageWidth,
   pageHeight,
 }: GenerateCertificateOptions) {
-  ensureFontLibrary();
+  await ensureFontLibrary();
 
   const minimumMargin = 10;
 
