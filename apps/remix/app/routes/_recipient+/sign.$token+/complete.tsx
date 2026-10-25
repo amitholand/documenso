@@ -1,4 +1,3 @@
-import signingCelebration from '@documenso/assets/images/signing-celebration.png';
 import { getOptionalSession } from '@documenso/auth/server/lib/utils/get-session';
 import { useOptionalSession } from '@documenso/lib/client-only/providers/session';
 import { loadRecipientBrandingByTeamId } from '@documenso/lib/server-only/branding/load-recipient-branding';
@@ -6,24 +5,26 @@ import { getDocumentAndSenderByToken } from '@documenso/lib/server-only/document
 import { isRecipientAuthorized } from '@documenso/lib/server-only/document/is-recipient-authorized';
 import { getFieldsForToken } from '@documenso/lib/server-only/field/get-fields-for-token';
 import { getRecipientByToken } from '@documenso/lib/server-only/recipient/get-recipient-by-token';
-import { getRecipientSignatures } from '@documenso/lib/server-only/recipient/get-recipient-signatures';
 import { isDocumentCompleted } from '@documenso/lib/utils/document';
+import { getDocumentDataUrlForPdfViewer } from '@documenso/lib/utils/envelope-download';
 import { trpc } from '@documenso/trpc/react';
 import { DocumentShareButton } from '@documenso/ui/components/document/document-share-button';
-import { SigningCard3D } from '@documenso/ui/components/signing-card';
 import { cn } from '@documenso/ui/lib/utils';
 import { Badge } from '@documenso/ui/primitives/badge';
 import { Button } from '@documenso/ui/primitives/button';
+import { Card, CardContent } from '@documenso/ui/primitives/card';
 import { useLingui } from '@lingui/react';
 import { Trans } from '@lingui/react/macro';
 import { DocumentStatus, FieldType, RecipientRole } from '@prisma/client';
 import { CheckCircle2, Clock8, DownloadIcon, Loader2 } from 'lucide-react';
-import { Link } from 'react-router';
+import { useEffect } from 'react';
+import { Link, useRevalidator } from 'react-router';
 import { match } from 'ts-pattern';
 
 import { EnvelopeDownloadDialog } from '~/components/dialogs/envelope-download-dialog';
 import { ClaimAccount } from '~/components/general/claim-account';
 import { DocumentSigningAuthPageView } from '~/components/general/document-signing/document-signing-auth-page';
+import PDFViewerLazy from '~/components/general/pdf-viewer/pdf-viewer-lazy';
 import { RecipientBranding } from '~/components/general/recipient-branding';
 import { useCspNonce } from '~/utils/nonce';
 
@@ -73,7 +74,6 @@ export async function loader({ params, request }: Route.LoaderArgs) {
     } as const;
   }
 
-  const signatures = await getRecipientSignatures({ recipientId: recipient.id });
   const recipientName =
     recipient.name || fields.find((field) => field.type === FieldType.NAME)?.customText || recipient.email;
 
@@ -89,7 +89,6 @@ export async function loader({ params, request }: Route.LoaderArgs) {
     canSignUp,
     recipientName,
     recipientEmail: recipient.email,
-    signatures,
     document,
     recipient,
     returnToHomePath,
@@ -108,7 +107,6 @@ export default function CompletedSigningPage({ loaderData }: Route.ComponentProp
     isDocumentAccessValid,
     canSignUp,
     recipientName,
-    signatures,
     document,
     recipient,
     recipientEmail,
@@ -133,6 +131,15 @@ export default function CompletedSigningPage({ loaderData }: Route.ComponentProp
 
   // Use signing status from query if available, otherwise fall back to document status
   const signingStatus = signingStatusData?.status ?? 'PENDING';
+
+  const { revalidate } = useRevalidator();
+
+  // Once sealing finishes, reload the page data so the preview shows the signed document.
+  useEffect(() => {
+    if (signingStatus === 'COMPLETED' && document?.status !== DocumentStatus.COMPLETED) {
+      void revalidate();
+    }
+  }, [signingStatus, document?.status, revalidate]);
 
   if (!isDocumentAccessValid) {
     return (
@@ -169,12 +176,24 @@ export default function CompletedSigningPage({ loaderData }: Route.ComponentProp
               </span>
             </Badge>
 
-            {/* Card with recipient */}
-            <SigningCard3D
-              name={recipientName}
-              signature={signatures.at(0)}
-              signingCelebrationImage={signingCelebration}
-            />
+            <div className="w-full max-w-3xl">
+              <Card className="rounded-xl before:rounded-xl" gradient>
+                <CardContent className="p-2">
+                  <PDFViewerLazy
+                    key={document.documentData.id}
+                    data={getDocumentDataUrlForPdfViewer({
+                      envelopeId: document.envelopeId,
+                      envelopeItemId: document.envelopeItems[0]?.id,
+                      documentDataId: document.documentData.id,
+                      version: 'current',
+                      token: recipient.token,
+                      presignToken: undefined,
+                    })}
+                    scrollParentRef="window"
+                  />
+                </CardContent>
+              </Card>
+            </div>
 
             <h2 className="mt-6 max-w-[35ch] text-center font-semibold text-2xl leading-normal md:text-3xl lg:text-4xl">
               {recipient.role === RecipientRole.SIGNER && <Trans>Document Signed</Trans>}
