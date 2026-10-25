@@ -1,4 +1,3 @@
-import { lookup } from 'node:dns/promises';
 import { tsRestHonoApp } from '@documenso/api/hono';
 import { auth } from '@documenso/auth/server';
 import { rejectEmbedSessionMiddleware } from '@documenso/auth/server/lib/session/embed-session-restrictions';
@@ -19,7 +18,6 @@ import { migrateDeletedAccountServiceAccount } from '@documenso/lib/server-only/
 import { migrateLegacyServiceAccount } from '@documenso/lib/server-only/user/service-accounts/legacy-service-account';
 import { env } from '@documenso/lib/utils/env';
 import { logger } from '@documenso/lib/utils/logger';
-import { prisma } from '@documenso/prisma';
 import { openApiDocument } from '@documenso/trpc/server/open-api';
 import { Hono } from 'hono';
 import { contextStorage } from 'hono/context-storage';
@@ -147,43 +145,6 @@ app.route('/api/csc', csc);
 // API servers.
 app.route('/api/v1', tsRestHonoApp);
 app.use('/api/jobs/*', jobsClient.getApiHandler());
-
-// TEMPORARY: reports where request time goes inside the function. Needs a valid session and only
-// returns durations. Remove once the slow requests are explained.
-app.get('/api/diag/timing', async (c) => {
-  const timings: Record<string, number> = {};
-
-  const time = async <T>(name: string, fn: () => Promise<T>) => {
-    const start = performance.now();
-
-    try {
-      return await fn();
-    } finally {
-      timings[name] = Math.round((performance.now() - start) * 10) / 10;
-    }
-  };
-
-  const session = await time('sessionLookup', async () => await getOptionalSession(c.req.raw).catch(() => null));
-
-  if (!session?.isAuthenticated) {
-    return c.json({ error: 'Unauthorized' }, 401);
-  }
-
-  const databaseHost = new URL(env('NEXT_PRIVATE_DATABASE_URL') ?? '').hostname;
-
-  await time('eventLoopTick', async () => await new Promise((resolve) => setImmediate(resolve)));
-  await time('dnsLookup', async () => await lookup(databaseHost));
-  await time('query1', async () => await prisma.$queryRaw`select 1`);
-  await time('query2', async () => await prisma.$queryRaw`select 1`);
-  await time('query3', async () => await prisma.$queryRaw`select 1`);
-
-  return c.json({
-    timings,
-    uptimeSeconds: Math.round(process.uptime()),
-    pid: process.pid,
-    region: env('VERCEL_REGION') ?? null,
-  });
-});
 
 app.use('/api/trpc/*', trpcRateLimitMiddleware);
 app.use('/api/trpc/*', reactRouterTrpcServer);
