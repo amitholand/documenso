@@ -96,6 +96,8 @@ export const templateRouter = router({
         userId: ctx.user.id,
         teamId,
         ...input,
+        // Every API token in a team sees the same templates. The web app keeps role based visibility.
+        ignoreVisibility: ctx.metadata.source !== 'app',
       });
 
       // Remapping for backwards compatibility.
@@ -186,6 +188,8 @@ export const templateRouter = router({
         },
         userId: ctx.user.id,
         teamId,
+        // Every API token in a team sees the same templates. The web app keeps role based visibility.
+        ignoreVisibility: ctx.metadata.source !== 'app',
       });
     }),
 

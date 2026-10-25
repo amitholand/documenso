@@ -657,6 +657,8 @@ export const ApiContractV1Implementation = tsr.router(ApiContractV1, {
         },
         userId: user.id,
         teamId: team.id,
+        // Every token in a team sees the same templates.
+        ignoreVisibility: true,
       });
 
       return {
@@ -691,6 +693,8 @@ export const ApiContractV1Implementation = tsr.router(ApiContractV1, {
         perPage,
         userId: user.id,
         teamId: team.id,
+        // Every token in a team sees the same templates.
+        ignoreVisibility: true,
       });
 
       return {

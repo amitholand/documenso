@@ -16,6 +16,14 @@ export type FindTemplatesOptions = {
   folderId?: string;
   query?: string;
   ownerIds?: number[];
+
+  /**
+   * Return every template in the team regardless of the member's role.
+   *
+   * The user must still belong to the team. Used for API token requests so every token in a
+   * team sees the same templates.
+   */
+  ignoreVisibility?: boolean;
 };
 
 export const findTemplates = async ({
@@ -27,6 +35,7 @@ export const findTemplates = async ({
   folderId,
   query,
   ownerIds,
+  ignoreVisibility = false,
 }: FindTemplatesOptions) => {
   const { teamRole } = await getMemberRoles({
     teamId,
@@ -36,9 +45,10 @@ export const findTemplates = async ({
     },
   });
 
-  const filters: Prisma.EnvelopeWhereInput[] = [
-    { teamId },
-    {
+  const filters: Prisma.EnvelopeWhereInput[] = [{ teamId }, folderId ? { folderId } : { folderId: null }];
+
+  if (!ignoreVisibility) {
+    filters.push({
       OR: [
         {
           visibility: {
@@ -47,9 +57,8 @@ export const findTemplates = async ({
         },
         { userId, teamId },
       ],
-    },
-    folderId ? { folderId } : { folderId: null },
-  ];
+    });
+  }
 
   if (ownerIds && ownerIds.length > 0) {
     filters.push({ userId: { in: ownerIds } });
