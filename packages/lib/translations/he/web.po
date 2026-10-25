@@ -1635,7 +1635,7 @@ msgstr "מידע נוסף על המותג שיוצג בתחתית האימייל
 #: packages/lib/constants/organisations-translations.ts
 #: packages/lib/constants/teams-translations.ts
 msgid "Admin"
-msgstr "מנהל"
+msgstr "מנהל מערכת"
 
 #: apps/remix/app/routes/_authenticated+/admin+/documents.$id.tsx
 #: apps/remix/app/routes/_authenticated+/admin+/email-domains.$id.tsx
