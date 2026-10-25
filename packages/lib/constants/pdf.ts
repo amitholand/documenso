@@ -15,7 +15,15 @@ const SIGNATURE_FONT_FAMILY_CAVEAT = 'Caveat';
 // text would otherwise render with JP forms. Family names sync with
 // apps/remix/app/app.css and packages/lib/server-only/pdf/helpers.ts.
 const SIGNATURE_FONT_FAMILY_NOTO =
-  '"Noto Sans", "Noto Sans Chinese", "Noto Sans Japanese", "Noto Sans Korean", sans-serif';
+  '"Noto Sans", "Noto Sans Hebrew", "Noto Sans Chinese", "Noto Sans Japanese", "Noto Sans Korean", sans-serif';
+
+/**
+ * Font family for the text of generated PDFs such as the signing certificate and audit log.
+ *
+ * Inter has no Hebrew glyphs, so Hebrew falls back to Noto Sans Hebrew. Family names sync with
+ * packages/lib/server-only/pdf/helpers.ts.
+ */
+export const PDF_TEXT_FONT_FAMILY = 'Inter, "Noto Sans Hebrew"';
 
 const isASCII = (str: string) => /^\p{ASCII}*$/u.test(str);
 

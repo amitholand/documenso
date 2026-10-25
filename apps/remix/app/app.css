@@ -35,6 +35,15 @@
   font-display: swap;
 }
 
+/* Hebrew noto sans */
+@font-face {
+  font-family: "Noto Sans Hebrew";
+  src: url("/fonts/noto-sans-hebrew.ttf") format("truetype-variations");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
 /* Korean noto sans */
 @font-face {
   font-family: "Noto Sans Korean";
@@ -66,6 +75,6 @@
   :root {
     --font-sans: "Inter";
     --font-signature: "Caveat";
-    --font-noto: "Noto Sans", "Noto Sans Korean", "Noto Sans Japanese", "Noto Sans Chinese";
+    --font-noto: "Noto Sans", "Noto Sans Hebrew", "Noto Sans Korean", "Noto Sans Japanese", "Noto Sans Chinese";
   }
 }

@@ -76,6 +76,13 @@ const registerFonts = async () => {
     });
   }
 
+  if (!FontLibrary.has('Noto Sans Hebrew')) {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    FontLibrary.use({
+      ['Noto Sans Hebrew']: [await resolveFontFilePath('noto-sans-hebrew.ttf')],
+    });
+  }
+
   if (!FontLibrary.has('Noto Sans')) {
     // eslint-disable-next-line react-hooks/rules-of-hooks
     FontLibrary.use({

@@ -6,6 +6,7 @@ describe('getSignatureFontFamily', () => {
   const expectCaveat = (family: string) => expect(family).toBe('Caveat');
   const expectNotoChain = (family: string) => {
     expect(family).toContain('"Noto Sans"');
+    expect(family).toContain('"Noto Sans Hebrew"');
     expect(family).toContain('"Noto Sans Chinese"');
     expect(family).toContain('"Noto Sans Japanese"');
     expect(family).toContain('"Noto Sans Korean"');

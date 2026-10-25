@@ -5,7 +5,7 @@ import type { FieldToRender, RenderFieldElementOptions } from './field-renderer'
 import { calculateFieldPosition } from './field-renderer';
 
 export const konvaTextFontFamily =
-  '"Noto Sans", "Noto Sans Japanese", "Noto Sans Chinese", "Noto Sans Korean", sans-serif';
+  '"Noto Sans", "Noto Sans Hebrew", "Noto Sans Japanese", "Noto Sans Chinese", "Noto Sans Korean", sans-serif';
 export const konvaTextFill = 'black';
 
 export const upsertFieldGroup = (field: FieldToRender, options: RenderFieldElementOptions): Konva.Group => {
