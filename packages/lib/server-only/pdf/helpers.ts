@@ -1,3 +1,4 @@
+import fs from 'node:fs';
 import path from 'node:path';
 import { AppError, AppErrorCode } from '@documenso/lib/errors/app-error';
 import { FontLibrary } from '@documenso/skia-canvas';
@@ -6,13 +7,29 @@ import { FieldType } from '@prisma/client';
 import { match } from 'ts-pattern';
 
 /**
+ * Resolves a file under the public folder.
+ *
+ * On Vercel the public folder is not part of the function bundle, so the build copies it into
+ * build/server/hono/public, which is included in the function. Local development reads from public/.
+ */
+export const resolvePublicAssetPath = (relativePath: string) => {
+  const bundledPath = path.join(process.cwd(), 'build/server/hono/public', relativePath);
+
+  if (fs.existsSync(bundledPath)) {
+    return bundledPath;
+  }
+
+  return path.join(process.cwd(), 'public', relativePath);
+};
+
+/**
  * Ensure all required fonts are registered in the skia-canvas FontLibrary.
  *
  * Fonts are registered once per process and retained — calling this multiple
  * times is a no-op after the first invocation.
  */
 export const ensureFontLibrary = () => {
-  const fontPath = path.join(process.cwd(), 'public/fonts');
+  const fontPath = resolvePublicAssetPath('fonts');
 
   if (!FontLibrary.has('Caveat')) {
     // eslint-disable-next-line react-hooks/rules-of-hooks

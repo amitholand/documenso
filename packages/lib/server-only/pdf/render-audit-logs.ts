@@ -2,7 +2,6 @@
 import '../konva/skia-backend';
 
 import fs from 'node:fs';
-import path from 'node:path';
 import type { Canvas } from '@documenso/skia-canvas';
 import { Image as SkiaImage } from '@documenso/skia-canvas';
 import type { I18n } from '@lingui/core';
@@ -20,7 +19,7 @@ import { RECIPIENT_ROLES_DESCRIPTION } from '../../constants/recipient-roles';
 import type { TDocumentAuditLog } from '../../types/document-audit-logs';
 import { DOCUMENT_AUDIT_LOG_TYPE } from '../../types/document-audit-logs';
 import { formatDocumentAuditLogAction } from '../../utils/document-audit-logs';
-import { ensureFontLibrary } from './helpers';
+import { ensureFontLibrary, resolvePublicAssetPath } from './helpers';
 
 export type AuditLogRecipient = {
   id: number;
@@ -442,7 +441,7 @@ const renderBranding = () => {
 
   const brandingHeight = 16;
 
-  const logoPath = path.join(process.cwd(), 'public/static/logo.png');
+  const logoPath = resolvePublicAssetPath('static/logo.png');
   const logo = fs.readFileSync(logoPath);
 
   // eslint-disable-next-line @typescript-eslint/consistent-type-assertions

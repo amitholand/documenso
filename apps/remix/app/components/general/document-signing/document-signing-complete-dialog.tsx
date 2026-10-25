@@ -378,7 +378,7 @@ export const DocumentSigningCompleteDialog = ({
         </Button>
       </DialogTrigger>
 
-      <DialogContent position={position}>
+      <DialogContent position={position} className="max-h-[calc(100dvh-2rem)] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
             <Trans>Are you sure?</Trans>
