@@ -18,13 +18,23 @@ const setRateLimitHeaders = (c: Context, result: RateLimitCheckResult) => {
  * Create a Hono middleware that applies rate limiting to a route.
  *
  * Uses IP address for identification. Optionally accepts an identifier
- * function for per-user/per-entity limiting.
+ * function for per-user/per-entity limiting, and a skip function to bypass
+ * the limit for requests that are already trusted (such as valid sessions).
  */
 export const createRateLimitMiddleware = (
   limiter: ReturnType<typeof createRateLimit>,
-  options?: { identifierFn?: (c: Context) => string | undefined },
+  options?: {
+    identifierFn?: (c: Context) => string | undefined;
+    shouldSkip?: (c: Context) => Promise<boolean> | boolean;
+  },
 ): MiddlewareHandler => {
   return async (c, next) => {
+    if (options?.shouldSkip && (await options.shouldSkip(c))) {
+      await next();
+
+      return;
+    }
+
     let ip: string;
 
     try {

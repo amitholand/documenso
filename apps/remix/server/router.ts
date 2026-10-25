@@ -1,6 +1,7 @@
 import { tsRestHonoApp } from '@documenso/api/hono';
 import { auth } from '@documenso/auth/server';
 import { rejectEmbedSessionMiddleware } from '@documenso/auth/server/lib/session/embed-session-restrictions';
+import { getOptionalSession } from '@documenso/auth/server/lib/utils/get-session';
 import { csc } from '@documenso/ee/server-only/signing/csc/hono';
 import { jobsClient } from '@documenso/lib/jobs/client';
 import { LicenseClient } from '@documenso/lib/server-only/license/license-client';
@@ -58,7 +59,15 @@ const app = new Hono<HonoEnv>().basePath(basePath || '/');
 const apiV1RateLimitMiddleware = createRateLimitMiddleware(apiV1RateLimit);
 const apiV2RateLimitMiddleware = createRateLimitMiddleware(apiV2RateLimit);
 const aiRateLimitMiddleware = createRateLimitMiddleware(aiRateLimit);
-const trpcRateLimitMiddleware = createRateLimitMiddleware(apiTrpcRateLimit);
+// Requests with a valid session skip the database rate limit, which costs about a second per request.
+// Anonymous requests are still limited.
+const trpcRateLimitMiddleware = createRateLimitMiddleware(apiTrpcRateLimit, {
+  shouldSkip: async (c) => {
+    const session = await getOptionalSession(c.req.raw).catch(() => null);
+
+    return Boolean(session?.isAuthenticated);
+  },
+});
 const fileRateLimitMiddleware = createRateLimitMiddleware(fileUploadRateLimit);
 
 /**
