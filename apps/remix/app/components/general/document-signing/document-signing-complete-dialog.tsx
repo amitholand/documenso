@@ -10,6 +10,7 @@ import {
 import { AppError, AppErrorCode } from '@documenso/lib/errors/app-error';
 import { type TRecipientAccessAuth, ZDocumentAccessAuthSchema } from '@documenso/lib/types/document-auth';
 import { ZFieldMetaSchema } from '@documenso/lib/types/field-meta';
+import type { TSigningConsentInput } from '@documenso/lib/types/signing-consent';
 import {
   fieldsContainUnsignedRequiredField,
   isFieldUnsignedAndRequired,
@@ -58,6 +59,7 @@ export type DocumentSigningCompleteDialogProps = {
     nextSigner?: { name: string; email: string },
     accessAuthOptions?: TRecipientAccessAuth,
     directRecipient?: { name: string; email: string },
+    signingConsent?: TSigningConsentInput,
   ) => void | Promise<void>;
   recipient: Pick<Recipient, 'name' | 'email' | 'role' | 'token'>;
   disabled?: boolean;
@@ -77,7 +79,10 @@ export type DocumentSigningCompleteDialogProps = {
   /** Whether the recipient uploaded a company stamp. Defaults to checking `fields`. */
   hasStampSignature?: boolean;
 
-  /** Direct templates create the recipient on completion, so consent can't be recorded beforehand. */
+  /**
+   * Direct templates create the recipient on completion, so consent can't be recorded beforehand.
+   * It is passed to `onSignatureComplete` instead, which must send it to the server.
+   */
   skipConsentRecording?: boolean;
 
   /** When provided, replaces the confirmation form (and 2FA step) as the dialog body. */
@@ -295,19 +300,27 @@ export const DocumentSigningCompleteDialog = ({
       const nextSigner =
         allowDictateNextSigner && data.name && data.email ? { name: data.name, email: data.email } : undefined;
 
-      if (requiresConsent && !skipConsentRecording) {
+      let signingConsent: TSigningConsentInput | undefined;
+
+      if (requiresConsent) {
         const consent = consentForm.getValues();
 
-        await recordSigningConsent({
-          token: recipient.token,
+        signingConsent = {
           locale: i18n.locale,
           stamp: hasStamp
             ? { companyName: consent.companyName, companyNumber: consent.companyNumber, role: consent.role }
             : undefined,
+        };
+      }
+
+      if (signingConsent && !skipConsentRecording) {
+        await recordSigningConsent({
+          token: recipient.token,
+          ...signingConsent,
         });
       }
 
-      await onSignatureComplete(nextSigner, data.accessAuthOptions, recipientOverridePayload);
+      await onSignatureComplete(nextSigner, data.accessAuthOptions, recipientOverridePayload, signingConsent);
     } catch (error) {
       const err = AppError.parseError(error);
 

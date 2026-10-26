@@ -634,6 +634,7 @@ export const templateRouter = router({
         signedFieldValues,
         templateUpdatedAt,
         nextSigner,
+        signingConsent,
       } = input;
 
       ctx.logger.info({
@@ -657,6 +658,7 @@ export const templateRouter = router({
             }
           : undefined,
         nextSigner,
+        signingConsent,
         requestMetadata: ctx.metadata,
       });
     }),

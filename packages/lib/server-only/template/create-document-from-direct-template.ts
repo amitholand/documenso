@@ -18,6 +18,7 @@ import { DateTime } from 'luxon';
 import { match } from 'ts-pattern';
 import { z } from 'zod';
 
+import { isStampSignatureField } from '../../constants/signing-consent';
 import { AppError, AppErrorCode } from '../../errors/app-error';
 import { jobs } from '../../jobs/client';
 import { DOCUMENT_AUDIT_LOG_TYPE, RECIPIENT_DIFF_TYPE } from '../../types/document-audit-logs';
@@ -26,6 +27,7 @@ import { DocumentAccessAuth, ZRecipientAuthOptionsSchema } from '../../types/doc
 import { extractDerivedDocumentEmailSettings } from '../../types/document-email';
 import { ZFieldMetaSchema } from '../../types/field-meta';
 import { ZSignatureLevelSchema } from '../../types/signature-level';
+import type { TSigningConsentInput } from '../../types/signing-consent';
 import { mapEnvelopeToWebhookDocumentPayload, ZWebhookDocumentSchema } from '../../types/webhook-payload';
 import type { ApiRequestMetadata } from '../../universal/extract-request-metadata';
 import { getFileServerSide } from '../../universal/upload/get-file.server';
@@ -51,6 +53,7 @@ import { validateFieldAuth } from '../document/validate-field-auth';
 import { incrementDocumentId } from '../envelope/increment-id';
 import { assertOrganisationRatesAndLimits } from '../rate-limit/assert-organisation-rates-and-limits';
 import { assignOmittedRecipientSigningOrders } from '../recipient/assign-omitted-recipient-signing-orders';
+import { buildSigningConsentAuditLog } from '../recipient/signing-consent';
 import { resolveSignatureLevel } from '../signature-level/resolve-signature-level';
 import { getTeamSettings } from '../team/get-team-settings';
 import { assertSenderNotDisabled } from '../user/assert-user-not-disabled';
@@ -73,6 +76,8 @@ export type CreateDocumentFromDirectTemplateOptions = {
     email: string;
     name: string;
   };
+  /** The consent the signer approved, recorded with the document since the recipient is created here. */
+  signingConsent?: TSigningConsentInput;
 };
 
 type CreatedDirectRecipientField = {
@@ -99,6 +104,7 @@ export const createDocumentFromDirectTemplate = async ({
   nextSigner,
   requestMetadata,
   user,
+  signingConsent,
 }: CreateDocumentFromDirectTemplateOptions): Promise<TCreateDocumentFromDirectTemplateResponse> => {
   const directTemplateEnvelope = await prisma.envelope.findFirst({
     where: {
@@ -186,6 +192,13 @@ export const createDocumentFromDirectTemplate = async ({
     recipients,
     recipients.flatMap((recipient) => recipient.fields),
   );
+
+  // Signers must explicitly approve the consent texts, as on every other signing path.
+  if (directTemplateRecipient.role === RecipientRole.SIGNER && !signingConsent) {
+    throw new AppError(AppErrorCode.INVALID_REQUEST, {
+      message: 'The signer must approve the signing consent before completing',
+    });
+  }
 
   if (recipientsWithMissingFields.length > 0) {
     throw new AppError(AppErrorCode.MISSING_SIGNATURE_FIELD, {
@@ -340,6 +353,16 @@ export const createDocumentFromDirectTemplate = async ({
   const directTemplateNonSignatureFields = createDirectRecipientFieldArgs.filter(({ signature }) => signature === null);
 
   const directTemplateSignatureFields = createDirectRecipientFieldArgs.filter(({ signature }) => signature !== null);
+
+  const hasDirectTemplateStamp = directTemplateSignatureFields.some(({ templateField }) =>
+    isStampSignatureField(templateField),
+  );
+
+  if (signingConsent && hasDirectTemplateStamp && !signingConsent.stamp) {
+    throw new AppError(AppErrorCode.INVALID_BODY, {
+      message: 'A stamp authority declaration is required when a company stamp was uploaded',
+    });
+  }
 
   // Enforce the organisation document-creation limit before creating the document.
   await assertOrganisationRatesAndLimits({
@@ -588,6 +611,7 @@ export const createDocumentFromDirectTemplate = async ({
      * Create the following audit logs.
      * - DOCUMENT_CREATED
      * - DOCUMENT_FIELD_INSERTED
+     * - DOCUMENT_RECIPIENT_CONSENT_ACCEPTED
      * - DOCUMENT_RECIPIENT_COMPLETED
      */
     const auditLogsToCreate: CreateDocumentAuditLogDataResponse[] = [
@@ -671,6 +695,25 @@ export const createDocumentFromDirectTemplate = async ({
           },
         }),
       ),
+      ...(signingConsent
+        ? [
+            buildSigningConsentAuditLog({
+              envelopeId: createdEnvelope.id,
+              recipient: createdDirectRecipient,
+              locale: signingConsent.locale,
+              stamp: signingConsent.stamp,
+              signedStampFields: createdDirectRecipientSignatureFields
+                .map(({ field }) => field)
+                .filter((field) => isStampSignatureField(field)),
+              user: {
+                id: user?.id,
+                name: user?.name,
+                email: directRecipientEmail,
+              },
+              metadata: requestMetadata,
+            }),
+          ]
+        : []),
       createDocumentAuditLogData({
         type: DOCUMENT_AUDIT_LOG_TYPE.DOCUMENT_RECIPIENT_COMPLETED,
         envelopeId: createdEnvelope.id,

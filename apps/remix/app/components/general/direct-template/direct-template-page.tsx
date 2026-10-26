@@ -1,6 +1,7 @@
 import { useAnalytics } from '@documenso/lib/client-only/hooks/use-analytics';
 import { RECIPIENT_ROLES_DESCRIPTION } from '@documenso/lib/constants/recipient-roles';
 import { AppError } from '@documenso/lib/errors/app-error';
+import type { TSigningConsentInput } from '@documenso/lib/types/signing-consent';
 import type { TTemplate } from '@documenso/lib/types/template';
 import { isRequiredField } from '@documenso/lib/utils/advanced-fields-helpers';
 import { getDocumentDataUrlForPdfViewer } from '@documenso/lib/utils/envelope-download';
@@ -85,6 +86,7 @@ export const DirectTemplatePageView = ({
   const onSignDirectTemplateSubmit = async (
     fields: DirectTemplateLocalField[],
     nextSigner?: { name: string; email: string },
+    signingConsent?: TSigningConsentInput,
   ) => {
     try {
       let directTemplateExternalId = searchParams?.get('externalId') || undefined;
@@ -95,6 +97,7 @@ export const DirectTemplatePageView = ({
 
       const { token } = await createDocumentFromDirectTemplate({
         nextSigner,
+        signingConsent,
         directTemplateToken,
         directTemplateExternalId,
         directRecipientName: fullName,

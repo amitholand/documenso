@@ -124,6 +124,7 @@ const signDirectTemplate = async (seeded: Awaited<ReturnType<typeof seedDirectTe
       },
     ],
     nextSigner: DICTATED,
+    signingConsent: { locale: 'en' },
     requestMetadata,
   });
 

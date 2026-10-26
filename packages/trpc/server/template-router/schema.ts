@@ -20,6 +20,7 @@ import { ZEnvelopeAttachmentTypeSchema } from '@documenso/lib/types/envelope-att
 import { ZFieldMetaPrefillFieldsSchema } from '@documenso/lib/types/field-meta';
 import { ZRecipientEmailSchema } from '@documenso/lib/types/recipient';
 import { ZFindResultResponse, ZFindSearchParamsSchema } from '@documenso/lib/types/search-params';
+import { ZSigningConsentInputSchema } from '@documenso/lib/types/signing-consent';
 import { ZTemplateLiteSchema, ZTemplateManySchema, ZTemplateSchema } from '@documenso/lib/types/template';
 import { zEmail } from '@documenso/lib/utils/zod';
 import { LegacyTemplateDirectLinkSchema } from '@documenso/prisma/types/template-legacy-schema';
@@ -83,6 +84,7 @@ export const ZCreateDocumentFromDirectTemplateRequestSchema = z.object({
       name: z.string().min(1).max(255),
     })
     .optional(),
+  signingConsent: ZSigningConsentInputSchema.optional(),
 });
 
 export const ZCreateDocumentFromTemplateRequestSchema = z.object({

@@ -9,6 +9,7 @@ import { isStampSignatureField } from '@documenso/lib/constants/signing-consent'
 import { AppError, AppErrorCode } from '@documenso/lib/errors/app-error';
 import type { TRecipientAccessAuth } from '@documenso/lib/types/document-auth';
 import { isTspEnvelope } from '@documenso/lib/types/signature-level';
+import type { TSigningConsentInput } from '@documenso/lib/types/signing-consent';
 import { mapSecondaryIdToDocumentId } from '@documenso/lib/utils/envelope';
 import { trpc } from '@documenso/trpc/react';
 import { useToast } from '@documenso/ui/primitives/use-toast';
@@ -289,6 +290,7 @@ export const EnvelopeSignerCompleteDialog = () => {
     nextSigner?: { name: string; email: string },
     accessAuthOptions?: TRecipientAccessAuth,
     recipientDetails?: { name: string; email: string },
+    signingConsent?: TSigningConsentInput,
   ) => {
     try {
       let directTemplateExternalId = searchParams?.get('externalId') || undefined;
@@ -324,6 +326,7 @@ export const EnvelopeSignerCompleteDialog = () => {
           };
         }),
         nextSigner,
+        signingConsent,
       });
 
       const redirectUrl = envelope.documentMeta.redirectUrl;

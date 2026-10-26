@@ -9,9 +9,10 @@ import {
   type TStampDeclaration,
 } from '@documenso/lib/constants/signing-consent';
 import { DOCUMENT_AUDIT_LOG_TYPE } from '@documenso/lib/types/document-audit-logs';
-import type { RequestMetadata } from '@documenso/lib/universal/extract-request-metadata';
+import type { ApiRequestMetadata, RequestMetadata } from '@documenso/lib/universal/extract-request-metadata';
 import { createDocumentAuditLogData } from '@documenso/lib/utils/document-audit-logs';
 import { prisma } from '@documenso/prisma';
+import type { Recipient } from '@prisma/client';
 import { DocumentStatus, RecipientRole, SigningStatus } from '@prisma/client';
 
 import { AppError, AppErrorCode } from '../../errors/app-error';
@@ -36,6 +37,81 @@ const findRecipientWithStampFields = async (token: string) => {
   return { recipient, signedStampFields };
 };
 
+type TSigningConsentStampField = {
+  customText: string;
+  signature?: { signatureImageAsBase64: string | null } | null;
+};
+
+export type BuildSigningConsentAuditLogOptions = {
+  envelopeId: string;
+  recipient: Pick<Recipient, 'id' | 'name' | 'email' | 'role'>;
+  locale: string;
+  stamp?: TStampDeclaration;
+  signedStampFields: TSigningConsentStampField[];
+  user?: { id?: number | null; name?: string | null; email?: string | null };
+  requestMetadata?: RequestMetadata;
+  metadata?: ApiRequestMetadata;
+};
+
+/**
+ * Build the audit log storing the exact consent texts a recipient approved, with their hash.
+ */
+export const buildSigningConsentAuditLog = ({
+  envelopeId,
+  recipient,
+  locale,
+  stamp,
+  signedStampFields,
+  user,
+  requestMetadata,
+  metadata,
+}: BuildSigningConsentAuditLogOptions) => {
+  if (signedStampFields.length > 0 && !stamp) {
+    throw new AppError(AppErrorCode.INVALID_BODY, {
+      message: 'A stamp authority declaration is required when a company stamp was uploaded',
+    });
+  }
+
+  const consentLocale = getSigningConsentLocale(locale);
+  const consentTexts = SIGNING_CONSENT_TEXTS[consentLocale];
+
+  const texts = [consentTexts.electronicSignature, consentTexts.termsAndPrivacy];
+
+  if (stamp && signedStampFields.length > 0) {
+    texts.push(fillStampAuthorityText(consentTexts.stampAuthority, stamp), consentTexts.stampNotVerified);
+  }
+
+  return createDocumentAuditLogData({
+    type: DOCUMENT_AUDIT_LOG_TYPE.DOCUMENT_RECIPIENT_CONSENT_ACCEPTED,
+    envelopeId,
+    user: user ?? {
+      name: recipient.name,
+      email: recipient.email,
+    },
+    requestMetadata,
+    metadata,
+    data: {
+      recipientEmail: recipient.email,
+      recipientName: recipient.name,
+      recipientId: recipient.id,
+      recipientRole: recipient.role,
+      consentVersion: SIGNING_CONSENT_VERSION,
+      locale: consentLocale,
+      texts,
+      textsSha256: sha256(texts.join('\n')),
+      stamp:
+        stamp && signedStampFields.length > 0
+          ? {
+              ...stamp,
+              stampImagesSha256: signedStampFields.map((field) =>
+                sha256(field.signature?.signatureImageAsBase64 ?? field.customText),
+              ),
+            }
+          : undefined,
+    },
+  });
+};
+
 export type RecordSigningConsentOptions = {
   token: string;
   locale: string;
@@ -57,49 +133,14 @@ export const recordSigningConsent = async ({ token, locale, stamp, requestMetada
     throw new AppError(AppErrorCode.RECIPIENT_ALREADY_SIGNED, { message: 'Recipient has already signed' });
   }
 
-  if (signedStampFields.length > 0 && !stamp) {
-    throw new AppError(AppErrorCode.INVALID_BODY, {
-      message: 'A stamp authority declaration is required when a company stamp was uploaded',
-    });
-  }
-
-  const consentLocale = getSigningConsentLocale(locale);
-  const consentTexts = SIGNING_CONSENT_TEXTS[consentLocale];
-
-  const texts = [consentTexts.electronicSignature, consentTexts.termsAndPrivacy];
-
-  if (stamp && signedStampFields.length > 0) {
-    texts.push(fillStampAuthorityText(consentTexts.stampAuthority, stamp), consentTexts.stampNotVerified);
-  }
-
   await prisma.documentAuditLog.create({
-    data: createDocumentAuditLogData({
-      type: DOCUMENT_AUDIT_LOG_TYPE.DOCUMENT_RECIPIENT_CONSENT_ACCEPTED,
+    data: buildSigningConsentAuditLog({
       envelopeId: recipient.envelope.id,
-      user: {
-        name: recipient.name,
-        email: recipient.email,
-      },
+      recipient,
+      locale,
+      stamp,
+      signedStampFields,
       requestMetadata,
-      data: {
-        recipientEmail: recipient.email,
-        recipientName: recipient.name,
-        recipientId: recipient.id,
-        recipientRole: recipient.role,
-        consentVersion: SIGNING_CONSENT_VERSION,
-        locale: consentLocale,
-        texts,
-        textsSha256: sha256(texts.join('\n')),
-        stamp:
-          stamp && signedStampFields.length > 0
-            ? {
-                ...stamp,
-                stampImagesSha256: signedStampFields.map((field) =>
-                  sha256(field.signature?.signatureImageAsBase64 ?? field.customText),
-                ),
-              }
-            : undefined,
-      },
     }),
   });
 };

@@ -8,6 +8,7 @@ import {
   ZRadioFieldMeta,
   ZTextFieldMeta,
 } from '@documenso/lib/types/field-meta';
+import type { TSigningConsentInput } from '@documenso/lib/types/signing-consent';
 import type { TTemplate } from '@documenso/lib/types/template';
 import { isFieldUnsignedAndRequired } from '@documenso/lib/utils/advanced-fields-helpers';
 import { sortFieldsByPosition, validateFieldsInserted } from '@documenso/lib/utils/fields';
@@ -57,7 +58,11 @@ export type DirectTemplateSigningFormProps = {
   directRecipient: Pick<Recipient, 'authOptions' | 'email' | 'role' | 'name' | 'token' | 'id'>;
   directRecipientFields: Field[];
   template: Omit<TTemplate, 'user'>;
-  onSubmit: (_data: DirectTemplateLocalField[], _nextSigner?: { name: string; email: string }) => Promise<void>;
+  onSubmit: (
+    _data: DirectTemplateLocalField[],
+    _nextSigner?: { name: string; email: string },
+    _signingConsent?: TSigningConsentInput,
+  ) => Promise<void>;
 };
 
 export type DirectTemplateLocalField = Field & {
@@ -146,7 +151,7 @@ export const DirectTemplateSigningForm = ({
     validateFieldsInserted(fieldsRequiringValidation);
   };
 
-  const handleSubmit = async (nextSigner?: { name: string; email: string }) => {
+  const handleSubmit = async (nextSigner?: { name: string; email: string }, signingConsent?: TSigningConsentInput) => {
     setValidateUninsertedFields(true);
 
     const isFieldsValid = validateFieldsInserted(fieldsRequiringValidation);
@@ -158,7 +163,7 @@ export const DirectTemplateSigningForm = ({
     setIsSubmitting(true);
 
     try {
-      await onSubmit(localFields, nextSigner);
+      await onSubmit(localFields, nextSigner, signingConsent);
     } catch {
       setIsSubmitting(false);
     }
@@ -414,7 +419,9 @@ export const DirectTemplateSigningForm = ({
 
           <DocumentSigningCompleteDialog
             isSubmitting={isSubmitting}
-            onSignatureComplete={async (nextSigner) => handleSubmit(nextSigner)}
+            onSignatureComplete={async (nextSigner, _accessAuthOptions, _directRecipient, signingConsent) =>
+              handleSubmit(nextSigner, signingConsent)
+            }
             skipConsentRecording
             documentTitle={template.title}
             fields={localFields}
